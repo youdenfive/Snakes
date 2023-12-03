@@ -1,6 +1,20 @@
 #include <SFML/Graphics.hpp>
 #include "gameMenu.h"
 
+/**
+*   Инициализирует название игры в меню.
+* 
+*   @param sf::Text& mtext           Результирующий текст.
+*   @param float xpos                X-овая позиция текста.
+*   @param float ypos                Y-овая позиция текста.
+*   @param sf::String str            Содержимое текста.
+*   @param int size_font             Размер шрифта.
+*   @param sf::Color menu_text_color Цвет текста.
+*   @param int bord                  Толщина контура.
+*   @param sf::Color border_color    Цвет контура.
+*
+*   @return void
+*/
 void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_font = 60,
     sf::Color menu_text_color = sf::Color::Black, int bord = 0, sf::Color border_color = sf::Color::White);
 
@@ -31,35 +45,46 @@ int main()
     titul.setFont(font);
     InitText(titul, 580, 50, "SNAKES", 150, sf::Color(40,40,40), 3, sf::Color::Yellow);
 
+    // Инициализирует главное меню.
     std::vector<sf::String> name = {"START", "SETINGS", "ABOUT", "EXIT" };
     gameMenu gameMenu_(window, 950, 350, name, 150, 120);
     gameMenu_.alignTextMenu(1);
     
+    // Инициализирует текст вложенных меню
     std::vector<sf::String> startGameName = { "SINGLEPLAYER", "MULTIPLAYER", "GO BACK" };
     std::vector<sf::String> setingsGameName = { "CONTROL", "THEME", "GO BACK"};
     std::vector<sf::String> aboutGameName = { "GO BACK" };
 
+    // Отрисовывает окно.
     while (window.isOpen())
     {
         sf::Event event;
+
+        // Обрабатывает события.
         while (window.pollEvent(event))
         {
+            // Закрывает окно.
             if (event.type == sf::Event::Closed)
                 window.close();
 
+            // Обрабатывает нажатие кнопки.
             if (event.type == sf::Event::KeyReleased) {
 
+                // Выбор нижестоящей кнопки.
                 if (event.key.code == sf::Keyboard::Up) {
                     gameMenu_.moveUp();
                 }
 
+                // Выбор нижестоящей кнопки.
                 if (event.key.code == sf::Keyboard::Down) {
                     gameMenu_.moveDown();
                 }
 
+                // Обрабатывает нажатие кнопки.
                 if (event.key.code == sf::Keyboard::Enter) {
                     switch (gameMenu_.getMode()) {
 
+                    // Главное меню.
                     case 0:
                         switch (gameMenu_.getSelected()) {
                         case 0:
@@ -77,6 +102,7 @@ int main()
                         }
                         break;
 
+                    // Меню начала игры.
                     case 1:
                         switch (gameMenu_.getSelected()) {
                         case 0:break;
@@ -87,6 +113,7 @@ int main()
                         }
                         break;
 
+                    // Меню настроек.
                     case 2:
                         switch (gameMenu_.getSelected()) {
                         case 0:break;
@@ -97,6 +124,7 @@ int main()
                         }
                         break;
 
+                    // Меню "about".
                     case 3:
                         switch (gameMenu_.getSelected()) {
                         case 0:
@@ -110,6 +138,7 @@ int main()
             }
         }
 
+        // Отрисовка.
         window.clear();
         window.draw(background);
         window.draw(titul);

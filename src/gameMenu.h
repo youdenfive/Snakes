@@ -4,40 +4,116 @@
 class gameMenu {
 
 	public:
+
+		/**
+		*	Конструктор.
+		* 
+		*	@param sf::RenderWindow& window		Обрабатываемое окно.
+		* 	@param float menuX					X-овая позиция кнопок.
+		* 	@param float menuY					Y-овая позиция кнопок.
+		* 	@param std::vector<sf::String> name Содержимое всех кнопок меню.
+		* 	@param int menu_step				Отступ между кнопками.
+		* 	@param int font_size				Размер шрифта.
+		*/
 		gameMenu(sf::RenderWindow& window, float menuX, float menuY, std::vector<sf::String> name, int menu_step = 80, int font_size = 60);
 
+		/// Деструктор.
 		~gameMenu()
 		{
 			delete[] _menu;
 		};
 
+		/**
+		*	Отрисовка меню.
+		* 
+		*	@return void
+		*/
 		void draw();
 
+		/**
+		*	Выбор вышестоящей кнопки.
+		*
+		*	@return void
+		*/
 		void moveUp();
 
+		/**
+		*	Выбор нижестоящей кнопки.
+		*
+		*	@return void
+		*/
 		void moveDown();
 
+		/**
+		*	Установка цвета меню.
+		*
+		*	@param sf::Color unselected_color Цвет невыбранной кнопки.
+		* 	@param sf::Color selected_color	  Цвет выбранной кнопки.
+		* 	@param sf::Color border_color	  Цвет контура.
+		* 
+		*	@return void
+		*/
 		void setColor(sf::Color unselected_color, sf::Color selected_color, sf::Color border_color);
 
+		/**
+		*	Выравнивание меню.
+		* 
+		*	@param integer posX Тип выравнивания по горизонтали.
+		* 
+		*	@return void
+		*/
 		void alignTextMenu(int posX);
 
+		/**
+		*	Возвращает номер выбранного пункта меню.
+		* 
+		*	@return integer
+		*/
 		int getSelected()
 		{
 			return _menu_selected;
 		};
 
+		/**
+		*	Устанавливает кнопки меню.
+		* 
+		*	@param std::vector<sf::String> name Содержимое кнопок.
+		* 
+		*	@return void
+		*/
 		void setMenu(std::vector<sf::String> name);
 
+		/**
+		*	Устанавливает режим меню.
+		* 
+		*	@param integer mode Режим меню.
+		* 
+		*	@return void
+		*/
 		void setMode(int mode)
 		{
 			_menuMode = mode;
 		};
 
+		/**
+		*	Возвращает режим меню.
+		*
+		*	@return integer
+		*/
 		int getMode()
 		{
 			return _menuMode;
 		}
 
+		/**
+		*	Меняет содержимое меню.
+		* 
+		*	@param std::vector<sf::String> name Содержимое кнопок.
+		*	@param int mode				        Режим меню.
+		*	@param int align					Тип выравнивания.
+		* 
+		*	@return void
+		*/
 		void pressButton(std::vector<sf::String> name, int mode, int align = 1);
 
 	private:
@@ -56,7 +132,16 @@ class gameMenu {
 		sf::Color _selected_color = sf::Color::Yellow;		// Цвет выбранного элемента меню.
 		sf::Color _border_color = sf::Color::Yellow;			// Цвет окантовки шрифта.
 
-		// Установка настроек текста меню.
+		/**
+		*	Устанавливает стиль кнопок.
+		* 
+		*	@param sf::Text& mtext	Результирующая кнопка.
+		* 	@param sf::String str	Содержимое кнопки.
+		* 	@param float xpos		X-овая координата кнопки.
+		*  	@param float ypos		Y-овая координата кнопки.
+		* 
+		*	@return void
+		*/
 		void setInitText(sf::Text& mtext, sf::String str, float xpos, float ypos);
 
 		sf::RenderWindow& _window; // Ссылка на графическое окно.

@@ -171,12 +171,9 @@
   <ItemGroup>
     <ClCompile Include="gameMenu.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="startGameMenu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gameMenu.h" />
-    <ClInclude Include="Snake.h" />
-    <ClInclude Include="startGameMenu.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

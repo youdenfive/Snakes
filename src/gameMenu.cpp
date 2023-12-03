@@ -16,6 +16,7 @@ void gameMenu::setInitText(sf::Text& mtext, sf::String str, float xpos, float yp
 gameMenu::gameMenu(sf::RenderWindow& window, float menuX, float menuY, std::vector<sf::String> name, int menu_step, int font_size):
 	_window(window), _menu_x(menuX), _menu_y(menuY), _menu_step(menu_step), _size_font(font_size)
 {
+	// Загружаем шрифт.
 	if (!_font.loadFromFile("../designe/font/menuFont.ttf")) exit(15);
 
 	setMenu(name);
@@ -29,6 +30,7 @@ void gameMenu::setMenu(std::vector<sf::String> name)
 	_menu_selected = 0;
 	_menu = new sf::Text[std::size(name)];
 
+	// Устанавливаем вид кнопок.
 	for (int i = 0; i < _max_menu; ++i) {
 		setInitText(_menu[i], name[i], _menu_x, _menu_y + i * _menu_step);
 	}
@@ -46,6 +48,7 @@ void gameMenu::alignTextMenu(int posX)
 {
 	int nullx = 0;
 
+	// Выравниваем в зависимости от выбранного режима.
 	for (int i = 0; i < _max_menu; ++i) {
 		switch (posX)
 		{
@@ -66,6 +69,7 @@ void gameMenu::alignTextMenu(int posX)
 
 void gameMenu::moveUp()
 {
+	// Осуществляется переход к верхней кнопке.
 	if (_menu_selected != 0) {
 		--_menu_selected;
 		_menu[_menu_selected + 1].setFillColor(_unselected_color);
@@ -80,6 +84,7 @@ void gameMenu::moveUp()
 
 void gameMenu::moveDown()
 {
+	// Осуществляется переход к нижней кнопке.
 	if (_menu_selected != _max_menu - 1) {
 		++_menu_selected;
 		_menu[_menu_selected - 1].setFillColor(_unselected_color);
@@ -94,6 +99,7 @@ void gameMenu::moveDown()
 
 void gameMenu::draw()
 {
+	// Отрисовывается каждая кнока меню.
 	for (int i = 0; i < _max_menu; ++i) {
 		_window.draw(_menu[i]);
 	}
