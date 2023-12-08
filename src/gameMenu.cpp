@@ -42,6 +42,13 @@ void gameMenu::setColor(sf::Color unselected_color, sf::Color selected_color, sf
 	_unselected_color = unselected_color;
 	_selected_color   = selected_color;
 	_border_color     = border_color;
+	
+	for (int i = 0; i < _max_menu; ++i) {
+		this->_menu[i].setFillColor(_unselected_color);
+		this->_menu[i].setOutlineColor(_border_color);
+	}
+
+	_menu[_menu_selected].setFillColor(_selected_color);
 }
 
 void gameMenu::alignTextMenu(int posX)

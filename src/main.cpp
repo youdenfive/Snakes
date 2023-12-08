@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include "gameMenu.h"
+#include "singlepalyer.h"
 
 /**
 *   Инициализирует название игры в меню.
@@ -105,7 +106,8 @@ int main()
                     // Меню начала игры.
                     case 1:
                         switch (gameMenu_.getSelected()) {
-                        case 0:break;
+                        case 0: singleplayer(window, gameMenu_); 
+                            break;
                         case 1:break;
                         case 2:                            
                             gameMenu_.pressButton(name, 0);

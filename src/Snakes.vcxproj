@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>.\</OutDir>
-    <IntDir>..\bin</IntDir>
+    <OutDir>..\bin</OutDir>
+    <IntDir>.\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -169,11 +169,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="apple.cpp" />
     <ClCompile Include="gameMenu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="snake.cpp" />
+    <ClCompile Include="singlepalyer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="apple.h" />
     <ClInclude Include="gameMenu.h" />
+    <ClInclude Include="singlepalyer.h" />
+    <ClInclude Include="snake.h" />
+    <ClInclude Include="wall.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
