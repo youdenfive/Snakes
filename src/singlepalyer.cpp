@@ -1,9 +1,36 @@
 #include <SFML/Graphics.hpp>
-#include "snake.h"
 #include "singlepalyer.h"
-#include "gameMenu.h"
 
-int singleplayer(sf::RenderWindow& window, gameMenu& menu) 
+singleplayer::singleplayer(Snake _snake) : snake(_snake)
+{     
+
+    // Размеры окна
+    float width = sf::VideoMode::getDesktopMode().width;
+    float height = sf::VideoMode::getDesktopMode().height;
+
+    // Инициализация прямоугольника границ
+    border.setSize(sf::Vector2f(width - 2 * CELL_SIZE, height - 2 * CELL_SIZE));
+    border.setFillColor(sf::Color::Transparent);  // Прозрачный цвет
+    border.setOutlineColor(sf::Color::Yellow);      // Цвет границ
+    border.setOutlineThickness(CELL_SIZE);              // Толщина границ
+
+    // Установка позиции прямоугольника границ, чтобы он оставался внутри экрана
+    border.setPosition(CELL_SIZE, CELL_SIZE);
+
+    // Загружаем шрифт
+    if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
+        std::cerr << "Failed to load font." << std::endl;
+    }
+
+    // Настройка параметров текста
+    lengthText.setFont(font);
+    lengthText.setCharacterSize(20);
+    lengthText.setFillColor(sf::Color::White);
+
+    initFont();  // Вызываем метод для инициализации шрифта
+};
+
+int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
 {
 
     window.setFramerateLimit(10);
@@ -12,13 +39,13 @@ int singleplayer(sf::RenderWindow& window, gameMenu& menu)
     srand(static_cast<unsigned>(time(nullptr)));
 
     Snake snake;
+    singleplayer game(snake);
 
     // Добавление стен
-    snake.map();
+    game.map();
 
     // Установка начального интервала обновления
-    snake.updateSpeed();
-    snake.draw(window);  // Рисуем границы перед основным циклом
+    game.updateSpeed();
 
     while (window.isOpen()) {
         sf::Event event;
@@ -29,13 +56,15 @@ int singleplayer(sf::RenderWindow& window, gameMenu& menu)
         }
 
         // После обработки событий ввода, обновляйте состояние кнопок
-        snake.handleInput(window);
+        game.handleInput(window);
 
         // Обновление положения яблока, чтобы избежать столкновения с стенами
-        snake.getApple().respawn(snake.getWalls());
+        game.getApple().respawn(game.getWalls());
 
         // Движение змейки
-        snake.move();
+        game.move();
+
+        updateSpeed(); // Вызываем для начальной установки интервала обновления
 
         // Инициализирует текст вложенных меню
         std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
@@ -43,28 +72,28 @@ int singleplayer(sf::RenderWindow& window, gameMenu& menu)
         gameOverMenu.setColor(sf::Color::Red, sf::Color(220,220,220), sf::Color::Red);
         gameOverMenu.alignTextMenu(1);
 
+
         // Проверка на столкновение
-        while (snake.checkCollision()) {
+        while (game.checkCollision()) {
             std::cout << "Game Over!" << std::endl;
 
             window.clear();
 
             // Отображение "Game Over" и длины змейки
             sf::Text gameOverText;
-            gameOverText.setFont(snake.getFont());
+            gameOverText.setFont(game.getFont());
             gameOverText.setCharacterSize(40);
             gameOverText.setFillColor(sf::Color::Red);
             gameOverText.setString("Game Over!");
             gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
 
             sf::Text lengthText;
-            lengthText.setFont(snake.getFont());
+            lengthText.setFont(game.getFont());
             lengthText.setCharacterSize(20);
             lengthText.setFillColor(sf::Color::White);
-            lengthText.setString("Length: " + std::to_string(snake.getLength()));
+            lengthText.setString("Length: " + std::to_string(game.score()));
             lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
 
-            //sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
                     window.close();
@@ -87,7 +116,7 @@ int singleplayer(sf::RenderWindow& window, gameMenu& menu)
                     if (event.key.code == sf::Keyboard::Enter) {
                         switch (gameOverMenu.getSelected()) {
                         case 0:
-                            singleplayer(window, menu);
+                            game.startSingleplayer(window, menu);
                             return snake.getLength();
 
                         case 1:
@@ -108,9 +137,110 @@ int singleplayer(sf::RenderWindow& window, gameMenu& menu)
 
         // Отрисовка
         window.clear();
-        snake.draw(window);
+        game.draw(window);
         window.display();
     }
 
     return snake.getLength();
+}
+
+void singleplayer::initFont() {
+    // Загружаем шрифт
+    if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
+        std::cerr << "Failed to load font." << std::endl;
+    }
+}
+
+void singleplayer::updateSpeed() {
+    // Пример: более короткий интервал для более длинной змейки
+
+    updateInterval = std::max(0.1f, 1.0f - 0.05f * static_cast<float>(snake.getBody().size()));
+}
+
+bool singleplayer::checkCollision() {
+
+    // Размеры окна
+    float width = sf::VideoMode::getDesktopMode().width;
+    float height = sf::VideoMode::getDesktopMode().height;
+
+    // Проверка на столкновение с границами
+    sf::Vector2f headPosition = snake.getHeadPosition();
+    if (headPosition.x < CELL_SIZE || headPosition.x >= width - CELL_SIZE ||
+        headPosition.y < CELL_SIZE || headPosition.y >= height - CELL_SIZE) {
+        return true;
+    }
+
+    // Проверка столкновения с стенами
+    for (const auto& wall : walls) {
+        if (headPosition == wall.getPosition()) {
+            return true;
+        }
+    }
+
+    // Проверка на столкновение с самой собой
+    return snake.checkCollisionWithMyself() ? true : false;
+}
+
+void singleplayer::map() {
+    for (int j = 0; j < 5; j++) {
+        for (int i = 0; i < 5; i++) {
+            addWall(sf::Vector2f(CELL_SIZE * (2 + i + j * 6), CELL_SIZE * (2 + i + j * 2)));
+            addWall(sf::Vector2f(CELL_SIZE * (61 - i - j * 6), CELL_SIZE * (2 + i + j * 2)));
+            addWall(sf::Vector2f(CELL_SIZE * (61 - i - j * 6), CELL_SIZE * (33 - i - j * 2)));
+            addWall(sf::Vector2f(CELL_SIZE * (2 + i + j * 6), CELL_SIZE * (33 - i - j * 2)));
+        }
+    }
+}
+
+void singleplayer::move() {
+
+    // Получаем прошедшее время
+    float elapsedTime = clock.getElapsedTime().asSeconds();
+
+    // Копируем голову и добавляем новую голову в новую позицию
+    sf::RectangleShape newHead = snake.getBody().front();
+    newHead.move(snake.getDirection());
+
+    sf::Vector2f headPosition = newHead.getPosition();
+
+    // Проверка на поедание яблока
+    if (headPosition == apple.getPosition()) {
+        snake.eatApple();
+        apple.respawn({});
+    }
+    else {
+        // Удаляем последний сегмент змейки
+        snake.move();
+    }
+
+    // Проверяем, прошло ли достаточно времени для обновления
+    if (elapsedTime > updateInterval) {
+        clock.restart();
+
+        // Обновляем скорость змейки в зависимости от длины
+        updateSpeed();
+    }
+}
+
+void singleplayer::draw(sf::RenderWindow& window) {
+
+    // Отрисовка стен
+    drawWalls(window);
+
+    // Отрисовка яблока
+    sf::RectangleShape appleShape(sf::Vector2f(CELL_SIZE, CELL_SIZE));
+    appleShape.setPosition(apple.getPosition());
+    appleShape.setFillColor(sf::Color::Red);
+    window.draw(appleShape);
+
+    snake.draw(window);
+
+    // Отображение количества клеток змейки
+    lengthText.setString("Length: " + std::to_string(snake.getLength()));
+    lengthText.setPosition(10 + CELL_SIZE, 10 + CELL_SIZE);  // Позиция текста
+
+    window.draw(lengthText);
+
+    // Отрисовка заднего фона (границ)
+    window.draw(border);
 }

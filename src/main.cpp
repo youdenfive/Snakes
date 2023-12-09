@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include "gameMenu.h"
 #include "singlepalyer.h"
+#include <iostream>
+#include <string>
 
 /**
 *   Инициализирует название игры в меню.
@@ -56,6 +58,16 @@ int main()
     std::vector<sf::String> setingsGameName = { "CONTROL", "THEME", "GO BACK"};
     std::vector<sf::String> aboutGameName = { "GO BACK" };
 
+    // Инициализирует меню управления.
+    std::vector<sf::String> controlName = { "UP", "LEFT", "DOWN", "RIGHT", "APPLY", "GO BACK" };
+    gameMenu controlMenu(window, 950, 350, controlName, 100, 70);
+    controlMenu.alignTextMenu(2);
+
+    sf::Text keyUp;
+    sf::String keyName;
+    Snake snake;
+    singleplayer game(snake);
+
     // Отрисовывает окно.
     while (window.isOpen())
     {
@@ -65,7 +77,7 @@ int main()
         while (window.pollEvent(event))
         {
             // Закрывает окно.
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
                 window.close();
 
             // Обрабатывает нажатие кнопки.
@@ -92,7 +104,7 @@ int main()
                             gameMenu_.pressButton(startGameName, 1);
                             break;
                         case 1:
-                            gameMenu_.pressButton(setingsGameName, 2, 2);
+                            gameMenu_.pressButton(setingsGameName, 2);
                             break;
                         case 2:
                             gameMenu_.pressButton(aboutGameName, 3);
@@ -106,7 +118,8 @@ int main()
                     // Меню начала игры.
                     case 1:
                         switch (gameMenu_.getSelected()) {
-                        case 0: singleplayer(window, gameMenu_); 
+                        case 0: 
+                            game.startSingleplayer(window, gameMenu_);
                             break;
                         case 1:break;
                         case 2:                            
@@ -118,7 +131,64 @@ int main()
                     // Меню настроек.
                     case 2:
                         switch (gameMenu_.getSelected()) {
-                        case 0:break;
+                        case 0: {
+                            bool control = true;
+
+                            while (control) {
+
+                                while (window.pollEvent(event))
+                                {
+                                    // Закрывает окно.
+                                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+                                        window.close();
+
+                                    // Обрабатывает нажатие кнопки.
+                                    if (event.type == sf::Event::KeyReleased) {
+
+                                        // Выбор нижестоящей кнопки.
+                                        if (event.key.code == sf::Keyboard::Up) {
+                                            controlMenu.moveUp();
+                                        }
+
+                                        // Выбор нижестоящей кнопки.
+                                        if (event.key.code == sf::Keyboard::Down) {
+                                            controlMenu.moveDown();
+                                        }
+                                        // Обрабатывает нажатие кнопки.
+                                        //if (event.key.code == sf::Keyboard::Enter) {
+                                            switch (controlMenu.getSelected()) {
+
+
+                                            case 0:
+                                                if (event.type == sf::Event::TextEntered)
+                                                    keyName = "W";
+                                                    InitText(keyUp, 950, 450, keyName, 15, sf::Color::Yellow, 3, sf::Color(40, 40, 40));
+                                                  break;
+                                            case 1:break;
+                                            case 2:break;
+                                            case 3:break;
+                                                
+
+                                                //if (event.key.code == sf::Keyboard::Enter) {
+                                                    case 4:break;
+                                                    case 5: 
+                                                    if (event.key.code == sf::Keyboard::Enter) {
+                                                        control = false;
+                                                    }
+                                                    break;
+                                                //}
+                                            }
+                                    }
+                                }
+                                window.clear();
+                                window.draw(background);
+                                window.draw(titul);
+                                controlMenu.draw();
+                                window.draw(keyUp);
+                                window.display();
+                            }
+                            break;
+                        }
                         case 1:break;
                         case 2:
                             gameMenu_.pressButton(name, 0);
