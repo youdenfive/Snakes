@@ -43,7 +43,8 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
 
     // Добавление стен
     game.map();
-
+    game.initTextures();
+    game.createSprites();
     // Установка начального интервала обновления
     game.updateSpeed();
 
@@ -184,10 +185,8 @@ bool singleplayer::checkCollision() {
 void singleplayer::map() {
     for (int j = 0; j < 5; j++) {
         for (int i = 0; i < 5; i++) {
-            addWall(sf::Vector2f(CELL_SIZE * (2 + i + j * 6), CELL_SIZE * (2 + i + j * 2)));
-            addWall(sf::Vector2f(CELL_SIZE * (61 - i - j * 6), CELL_SIZE * (2 + i + j * 2)));
-            addWall(sf::Vector2f(CELL_SIZE * (61 - i - j * 6), CELL_SIZE * (33 - i - j * 2)));
-            addWall(sf::Vector2f(CELL_SIZE * (2 + i + j * 6), CELL_SIZE * (33 - i - j * 2)));
+            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2) + 1) * CELL_SIZE, 
+                static_cast<int>(rand() % (HEIGHT - 2) + 1) * CELL_SIZE));
         }
     }
 }
@@ -207,10 +206,19 @@ void singleplayer::move() {
     if (headPosition == apple.getPosition()) {
         snake.eatApple();
         apple.respawn({});
+        appleRespawnTimer.restart();
+        createSprites();
     }
     else {
         // Удаляем последний сегмент змейки
         snake.move();
+    }
+
+    // Проверка времени с момента последнего респауна яблока
+    if (appleRespawnTimer.getElapsedTime().asSeconds() >= 5) {
+        // Респаун яблока и сброс таймера
+        apple.respawn(getWalls());
+        appleRespawnTimer.restart();
     }
 
     // Проверяем, прошло ли достаточно времени для обновления
@@ -220,27 +228,69 @@ void singleplayer::move() {
         // Обновляем скорость змейки в зависимости от длины
         updateSpeed();
     }
+    // Очищаем вектор спрайтов перед обновлением
+    bodySprites.clear();
+    createSprites();
 }
 
 void singleplayer::draw(sf::RenderWindow& window) {
-
-    // Отрисовка стен
-    drawWalls(window);
-
-    // Отрисовка яблока
-    sf::RectangleShape appleShape(sf::Vector2f(CELL_SIZE, CELL_SIZE));
-    appleShape.setPosition(apple.getPosition());
-    appleShape.setFillColor(sf::Color::Red);
-    window.draw(appleShape);
-
-    snake.draw(window);
+    // Отрисовка стен и яблока
+    drawSprites(window);
 
     // Отображение количества клеток змейки
-    lengthText.setString("Length: " + std::to_string(snake.getLength()));
+    lengthText.setString("Length: " + std::to_string(snake.getBody().size()));
     lengthText.setPosition(10 + CELL_SIZE, 10 + CELL_SIZE);  // Позиция текста
-
     window.draw(lengthText);
 
     // Отрисовка заднего фона (границ)
     window.draw(border);
+}
+
+
+void singleplayer::drawSprites(sf::RenderWindow& window) {
+    // Отрисовка стен
+    for (const auto& wall : walls) {
+        window.draw(wall.getSprite());
+    }
+
+    // Отрисовка каждого сегмента змейки с учетом поворота
+    for (const auto& sprite : bodySprites) {
+        window.draw(sprite);
+    }
+
+    // Отрисовка яблока
+    window.draw(appleSprite);
+}
+void singleplayer::initTextures() {
+    if (!snakeTexture.loadFromFile("snake.png")) {
+        std::cerr << "Failed to load snake texture." << std::endl;
+    }
+
+    if (!appleTexture.loadFromFile("apple.png")) {
+        std::cerr << "Failed to load apple texture." << std::endl;
+    }
+
+    if (!wallTexture.loadFromFile("wall.png")) {
+        std::cerr << "Failed to load wall texture." << std::endl;
+    }
+}
+
+void singleplayer::createSprites() {
+    appleSprite.setTexture(appleTexture);
+    appleSprite.setScale(CELL_SIZE / appleTexture.getSize().x, CELL_SIZE / appleTexture.getSize().y);
+    appleSprite.setPosition(apple.getPosition());
+    for (const auto& segment : snake.getBody()) {
+        sf::Sprite segmentSprite(snakeTexture);
+        segmentSprite.setScale(CELL_SIZE / snakeTexture.getSize().x, CELL_SIZE / snakeTexture.getSize().y);
+        segmentSprite.setPosition(segment.getPosition());
+        //segmentSprite.setRotation(rotation);  // Устанавливаем угол поворота
+        bodySprites.push_back(segmentSprite);
+    }
+
+    for (const auto& wall : walls) {
+        sf::Sprite wallSprite(wallTexture);
+        wallSprite.setScale(CELL_SIZE / wallTexture.getSize().x, CELL_SIZE / wallTexture.getSize().y);
+        wallSprite.setPosition(wall.getPosition());
+        bodySprites.push_back(wallSprite);
+    }
 }

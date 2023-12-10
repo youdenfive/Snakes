@@ -39,7 +39,7 @@ protected:
 
     void drawWalls(sf::RenderWindow& window) {
         for (const auto& wall : walls) {
-            wall.draw(window);
+            window.draw(wall.getSprite());
         }
     }
 
@@ -53,6 +53,9 @@ protected:
     void move();
     void handleInput(sf::RenderWindow& window) { snake.handleInput(window); };
     int score() { return snake.getLength(); };
+    void initTextures();
+    void drawSprites(sf::RenderWindow& window);
+    void createSprites();
 
 private:
     Snake snake;
@@ -66,4 +69,10 @@ private:
     sf::RectangleShape border;  // Добавленный объект прямоугольника для границ
     void initFont();
     std::vector<Wall> walls;
+    sf::Clock appleRespawnTimer;
+    sf::Texture snakeTexture;
+    sf::Texture appleTexture;
+    sf::Texture wallTexture;
+    sf::Sprite appleSprite;
+    std::deque<sf::Sprite> bodySprites;
 };
