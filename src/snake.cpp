@@ -40,18 +40,18 @@ void Snake::draw(sf::RenderWindow& window) {
 }
 
 
-void Snake::handleInput(sf::RenderWindow& window) {
+void Snake::handleInput(sf::RenderWindow& window, std::vector<std::pair<std::string, std::string>> control, sf::Keyboard::Scancode key) {
     // Обработка нажатий клавиш
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && direction.x == 0) {
+    if (sf::Keyboard::getDescription(key) == control[1].second && direction.x == 0) {
         direction = sf::Vector2f(-SPEED, 0);
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && direction.x == 0) {
+    else if (sf::Keyboard::getDescription(key) == control[3].second && direction.x == 0) {
         direction = sf::Vector2f(SPEED, 0);
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && direction.y == 0) {
+    else if (sf::Keyboard::getDescription(key) == control[0].second && direction.y == 0) {
         direction = sf::Vector2f(0, -SPEED);
     }
-    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) && direction.y == 0) {
+    else if (sf::Keyboard::getDescription(key) == control[2].second && direction.y == 0) {
         direction = sf::Vector2f(0, SPEED);
     }
 }

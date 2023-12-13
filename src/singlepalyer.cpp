@@ -56,8 +56,13 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
             }
         }
 
-        // ѕосле обработки событий ввода, обновл€йте состо€ние кнопок
-        game.handleInput(window);
+        if (sf::Event::KeyReleased) {
+
+            auto key = event.key.scancode;
+
+            // ѕосле обработки событий ввода, обновл€йте состо€ние кнопок
+            game.handleInput(window, key);
+        }
 
         // ќбновление положени€ €блока, чтобы избежать столкновени€ с стенами
         game.getApple().respawn(game.getWalls());
@@ -121,7 +126,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
                             return snake.getLength();
 
                         case 1:
-                            std::vector<sf::String> name = { "START", "SETINGS", "ABOUT", "EXIT" };
+                            std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
                             menu.pressButton(name, 0);
                             return snake.getLength();
                         }
@@ -262,15 +267,15 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
     window.draw(appleSprite);
 }
 void singleplayer::initTextures() {
-    if (!snakeTexture.loadFromFile("snake.png")) {
+    if (!snakeTexture.loadFromFile("../designe/snake.png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
     }
 
-    if (!appleTexture.loadFromFile("apple.png")) {
+    if (!appleTexture.loadFromFile("../designe/apple.png")) {
         std::cerr << "Failed to load apple texture." << std::endl;
     }
 
-    if (!wallTexture.loadFromFile("wall.png")) {
+    if (!wallTexture.loadFromFile("../designe/wall.png")) {
         std::cerr << "Failed to load wall texture." << std::endl;
     }
 }
@@ -293,4 +298,21 @@ void singleplayer::createSprites() {
         wallSprite.setPosition(wall.getPosition());
         bodySprites.push_back(wallSprite);
     }
+}
+
+void singleplayer::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key) 
+{
+    std::ifstream inpF("settings.ini");
+
+    std::string settingsStr = "";
+    std::string temp;
+
+    while (!inpF.eof()) {
+        inpF >> temp;
+        settingsStr += temp + "\n";
+    }
+
+    auto settings = unserialize(settingsStr);
+
+    snake.handleInput(window, settings, key);
 }

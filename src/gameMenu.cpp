@@ -118,3 +118,4 @@ void gameMenu::pressButton(std::vector<sf::String> name, int mode, int align)
 	this->setMode(mode);
 	this->alignTextMenu(align);
 }
+

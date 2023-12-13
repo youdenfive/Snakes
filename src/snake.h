@@ -13,7 +13,7 @@ public:
     Snake();
     Snake(const Snake& other);
     void grow();
-    void handleInput(sf::RenderWindow& window);
+    void handleInput(sf::RenderWindow& window, std::vector<std::pair<std::string, std::string>> control, sf::Keyboard::Scancode key);
     sf::Vector2f getHeadPosition() const;
     void draw(sf::RenderWindow& window);
     std::size_t getLength() const;

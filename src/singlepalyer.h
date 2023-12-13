@@ -3,6 +3,8 @@
 #include "snake.h"
 #include "gameMenu.h"
 #include <deque>
+#include <fstream>
+#include "serialize.h"
 
 class singleplayer {
 public:
@@ -51,7 +53,7 @@ protected:
     void draw(sf::RenderWindow& window);
 
     void move();
-    void handleInput(sf::RenderWindow& window) { snake.handleInput(window); };
+    void handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key);
     int score() { return snake.getLength(); };
     void initTextures();
     void drawSprites(sf::RenderWindow& window);

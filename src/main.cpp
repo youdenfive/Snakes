@@ -3,6 +3,8 @@
 #include "singlepalyer.h"
 #include <iostream>
 #include <string>
+#include <fstream>
+#include "serialize.h"
 
 /**
 *   Инициализирует название игры в меню.
@@ -21,10 +23,12 @@
 void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_font = 60,
     sf::Color menu_text_color = sf::Color::Black, int bord = 0, sf::Color border_color = sf::Color::White);
 
+void setControl(sf::Text& key, sf::String keyName, float ypos);
+
 int main()
 {
     // Создаем окно игры.
-    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "SNAKES", sf::Style::Fullscreen);
+    sf::RenderWindow window(sf::VideoMode(1600, 1000), "SNAKES");
 
     // Делаем курсор невидимым.
     window.setMouseCursorVisible(false);
@@ -49,13 +53,13 @@ int main()
     InitText(titul, 580, 50, "SNAKES", 150, sf::Color(40,40,40), 3, sf::Color::Yellow);
 
     // Инициализирует главное меню.
-    std::vector<sf::String> name = {"START", "SETINGS", "ABOUT", "EXIT" };
+    std::vector<sf::String> name = {"START", "SETTINGS", "ABOUT", "EXIT" };
     gameMenu gameMenu_(window, 950, 350, name, 150, 120);
     gameMenu_.alignTextMenu(1);
     
     // Инициализирует текст вложенных меню
     std::vector<sf::String> startGameName = { "SINGLEPLAYER", "MULTIPLAYER", "GO BACK" };
-    std::vector<sf::String> setingsGameName = { "CONTROL", "THEME", "GO BACK"};
+    std::vector<sf::String> settingsGameName = { "CONTROL", "THEME", "GO BACK"};
     std::vector<sf::String> aboutGameName = { "GO BACK" };
 
     // Инициализирует меню управления.
@@ -64,6 +68,9 @@ int main()
     controlMenu.alignTextMenu(2);
 
     sf::Text keyUp;
+    sf::Text keyLeft;
+    sf::Text keyDown;
+    sf::Text keyRight;
     sf::String keyName;
     Snake snake;
     singleplayer game(snake);
@@ -72,6 +79,18 @@ int main()
     while (window.isOpen())
     {
         sf::Event event;
+
+        std::ifstream inpF("settings.ini");
+
+        std::string settingsStr = "";
+
+        while (!inpF.eof()) {
+            std::string temp;
+            inpF >> temp;
+            settingsStr += temp + "\n";
+        }
+
+        auto settings = unserialize(settingsStr);
 
         // Обрабатывает события.
         while (window.pollEvent(event))
@@ -104,7 +123,7 @@ int main()
                             gameMenu_.pressButton(startGameName, 1);
                             break;
                         case 1:
-                            gameMenu_.pressButton(setingsGameName, 2);
+                            gameMenu_.pressButton(settingsGameName, 2);
                             break;
                         case 2:
                             gameMenu_.pressButton(aboutGameName, 3);
@@ -134,7 +153,16 @@ int main()
                         case 0: {
                             bool control = true;
 
+                            // Обрабатывает нажатие кнопки.
+                            sf::String keyU = settings[0].second;
+                            sf::String keyL = settings[1].second;
+                            sf::String keyD = settings[2].second;
+                            sf::String keyR = settings[3].second;
                             while (control) {
+
+                                sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+
+
 
                                 while (window.pollEvent(event))
                                 {
@@ -154,37 +182,97 @@ int main()
                                         if (event.key.code == sf::Keyboard::Down) {
                                             controlMenu.moveDown();
                                         }
-                                        // Обрабатывает нажатие кнопки.
-                                        //if (event.key.code == sf::Keyboard::Enter) {
-                                            switch (controlMenu.getSelected()) {
 
 
-                                            case 0:
-                                                if (event.type == sf::Event::TextEntered)
-                                                    keyName = "W";
-                                                    InitText(keyUp, 950, 450, keyName, 15, sf::Color::Yellow, 3, sf::Color(40, 40, 40));
-                                                  break;
-                                            case 1:break;
-                                            case 2:break;
-                                            case 3:break;
-                                                
 
-                                                //if (event.key.code == sf::Keyboard::Enter) {
-                                                    case 4:break;
-                                                    case 5: 
-                                                    if (event.key.code == sf::Keyboard::Enter) {
-                                                        control = false;
-                                                    }
-                                                    break;
-                                                //}
+                                        switch (controlMenu.getSelected()) {
+
+
+                                        case 0:
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+                                                    keyU = sf::Keyboard::getDescription(code);
+                                                }
                                             }
-                                    }
+
+                                                break;
+                                        case 1:
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+                                                    keyL = sf::Keyboard::getDescription(code);
+                                                }
+                                                }
+
+                                                break;
+                                        case 2:
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+                                                    keyD = sf::Keyboard::getDescription(code);
+                                                }
+                                            }
+
+                                                break;
+                                        case 3:
+
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+                                                    keyR = sf::Keyboard::getDescription(code);
+                                                }
+                                            }
+
+                                                break;
+
+                                            case 4:
+                                                if (event.key.code == sf::Keyboard::Enter) {
+
+                                                    std::string Up    = keyUp.getString();
+                                                    std::string Left  = keyLeft.getString();
+                                                    std::string Down  = keyDown.getString();
+                                                    std::string Right = keyRight.getString();
+
+                                                    std::vector<std::pair<std::string, std::string>> controlSettings;
+
+                                                    controlSettings.push_back(std::pair("Up", Up));
+                                                    controlSettings.push_back(std::pair("Left", Left));
+                                                    controlSettings.push_back(std::pair("Down", Down));
+                                                    controlSettings.push_back(std::pair("Right", Right));
+
+                                                    std::ofstream outF("settings.ini");
+
+                                                    outF << serialize(controlSettings);
+                                                }
+                                                break;
+                                            case 5:
+                                                if (event.key.code == sf::Keyboard::Enter) {
+                                                    control = false;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    
                                 }
+
+                                keyLeft.setFont(font);
+                                setControl(keyLeft, keyL, 460);
+                                keyUp.setFont(font);
+                                setControl(keyUp, keyU, 360);
+                                keyDown.setFont(font);
+                                setControl(keyDown, keyD, 560);
+                                keyRight.setFont(font);
+                                setControl(keyRight, keyR, 660);
+
                                 window.clear();
                                 window.draw(background);
                                 window.draw(titul);
                                 controlMenu.draw();
                                 window.draw(keyUp);
+                                window.draw(keyLeft);
+                                window.draw(keyDown);
+                                window.draw(keyRight);
                                 window.display();
                             }
                             break;
@@ -230,4 +318,9 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
     mtext.setFillColor(menu_text_color);
     mtext.setOutlineThickness(bord);
     mtext.setOutlineColor(border_color);
+}
+
+void setControl(sf::Text& key, sf::String keyName, float ypos)
+{
+    InitText(key, 1000, ypos, keyName, 55, sf::Color::Yellow, 3, sf::Color(40, 40, 40));
 }
