@@ -25,10 +25,14 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
 
 void setControl(sf::Text& key, sf::String keyName, float ypos);
 
+int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game);
+
 int main()
 {
     // Создаем окно игры.
-    sf::RenderWindow window(sf::VideoMode(1600, 1000), "SNAKES");
+    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "SNAKES", sf::Style::Fullscreen);
+
+    window.setFramerateLimit(60);
 
     // Делаем курсор невидимым.
     window.setMouseCursorVisible(false);
@@ -138,7 +142,7 @@ int main()
                     case 1:
                         switch (gameMenu_.getSelected()) {
                         case 0: 
-                            game.startSingleplayer(window, gameMenu_);
+                            gameSingleplayerStart(window, game);
                             break;
                         case 1:break;
                         case 2:                            
@@ -189,7 +193,7 @@ int main()
 
 
                                         case 0:
-                                            if (event.type == sf::Event::KeyReleased) {
+                                            if (event.type == sf::Event::KeyPressed) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyU = sf::Keyboard::getDescription(code);
@@ -198,7 +202,7 @@ int main()
 
                                                 break;
                                         case 1:
-                                            if (event.type == sf::Event::KeyReleased) {
+                                            if (event.type == sf::Event::KeyPressed) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyL = sf::Keyboard::getDescription(code);
@@ -207,7 +211,7 @@ int main()
 
                                                 break;
                                         case 2:
-                                            if (event.type == sf::Event::KeyReleased) {
+                                            if (event.type == sf::Event::KeyPressed) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyD = sf::Keyboard::getDescription(code);
@@ -217,7 +221,7 @@ int main()
                                                 break;
                                         case 3:
 
-                                            if (event.type == sf::Event::KeyReleased) {
+                                            if (event.type == sf::Event::KeyPressed) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyR = sf::Keyboard::getDescription(code);
@@ -323,4 +327,16 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
 void setControl(sf::Text& key, sf::String keyName, float ypos)
 {
     InitText(key, 1000, ypos, keyName, 55, sf::Color::Yellow, 3, sf::Color(40, 40, 40));
+}
+
+int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game)
+{
+    int result = game.startSingleplayer(window);
+    switch (result) {
+    case 2 :
+            gameSingleplayerStart(window, game);
+    case 0 :
+        return 1;
+    }
+    return 1;
 }

@@ -10,7 +10,7 @@ class singleplayer {
 public:
     singleplayer(Snake _snake);
 
-    int startSingleplayer(sf::RenderWindow& window, gameMenu& menu);
+    int startSingleplayer(sf::RenderWindow& window);
 
     void updateSpeed();
 

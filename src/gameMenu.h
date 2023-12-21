@@ -20,7 +20,7 @@ class gameMenu {
 		/// Деструктор.
 		~gameMenu()
 		{
-			delete[] _menu;
+			//delete[] _menu;
 		};
 
 		/**
