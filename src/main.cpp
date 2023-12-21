@@ -171,7 +171,7 @@ int main()
                                 while (window.pollEvent(event))
                                 {
                                     // Закрывает окно.
-                                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+                                    if (event.type == sf::Event::Closed)
                                         window.close();
 
                                     // Обрабатывает нажатие кнопки.
@@ -187,13 +187,11 @@ int main()
                                             controlMenu.moveDown();
                                         }
 
-
-
                                         switch (controlMenu.getSelected()) {
 
 
                                         case 0:
-                                            if (event.type == sf::Event::KeyPressed) {
+                                            if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyU = sf::Keyboard::getDescription(code);
@@ -202,7 +200,7 @@ int main()
 
                                                 break;
                                         case 1:
-                                            if (event.type == sf::Event::KeyPressed) {
+                                            if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyL = sf::Keyboard::getDescription(code);
@@ -211,7 +209,7 @@ int main()
 
                                                 break;
                                         case 2:
-                                            if (event.type == sf::Event::KeyPressed) {
+                                            if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyD = sf::Keyboard::getDescription(code);
@@ -221,7 +219,7 @@ int main()
                                                 break;
                                         case 3:
 
-                                            if (event.type == sf::Event::KeyPressed) {
+                                            if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyR = sf::Keyboard::getDescription(code);
