@@ -67,10 +67,19 @@ int main()
     gameMenu controlMenu(window, 950, 350, controlName, 100, 70);
     controlMenu.alignTextMenu(2);
 
+    // Инициализирует меню управления.
+    std::vector<sf::String> singleplayerName = { "ROUNDS", "BOTS", "PLAY", "GO BACK" };
+    gameMenu singleplayerMenu(window, 950, 350, singleplayerName, 100, 70);
+    singleplayerMenu.alignTextMenu(2);
+
     sf::Text keyUp;
     sf::Text keyLeft;
     sf::Text keyDown;
     sf::Text keyRight;
+
+    sf::Text keyRoundsCount;
+    sf::Text keyBotsCount;
+
     sf::String keyName;
     Snake snake;
     singleplayer game(snake);
@@ -135,17 +144,119 @@ int main()
                         break;
 
                     // Меню начала игры.
-                    case 1:
-                        switch (gameMenu_.getSelected()) {
-                        case 0: 
-                            game.startSingleplayer(window, gameMenu_);
-                            break;
-                        case 1:break;
-                        case 2:                            
-                            gameMenu_.pressButton(name, 0);
-                            break;
+                    case 1: {
+
+                        bool singleplayer = true;
+
+                        // Обрабатывает нажатие кнопки.
+                        sf::String roundsCount = settings[4].second;
+                        sf::String botsCount = settings[5].second;
+
+                        if (event.key.code == sf::Keyboard::Enter) {
+                            switch (gameMenu_.getSelected()) {
+                            case 0: {
+
+                                while (singleplayer) {
+
+                                    sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+
+
+
+                                    while (window.pollEvent(event))
+                                    {
+                                        // Закрывает окно.
+                                        if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+                                            window.close();
+
+                                        // Обрабатывает нажатие кнопки.
+                                        if (event.type == sf::Event::KeyReleased) {
+
+                                            // Выбор нижестоящей кнопки.
+                                            if (event.key.code == sf::Keyboard::Up) {
+                                                singleplayerMenu.moveUp();
+                                            }
+
+                                            // Выбор нижестоящей кнопки.
+                                            if (event.key.code == sf::Keyboard::Down) {
+                                                singleplayerMenu.moveDown();
+                                            }
+
+
+
+                                            switch (singleplayerMenu.getSelected()) {
+
+
+                                            case 0:
+                                                if (event.type == sf::Event::KeyReleased) {
+                                                    code = event.key.scancode;
+                                                    if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+                                                        roundsCount = sf::Keyboard::getDescription(code);
+                                                    }
+                                                }
+
+                                                break;
+                                            case 1:
+                                                if (event.type == sf::Event::KeyReleased) {
+                                                    code = event.key.scancode;
+                                                    if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+                                                        botsCount = sf::Keyboard::getDescription(code);
+                                                    }
+                                                }
+
+                                                break;
+                                            case 2:
+                                                if (event.key.code == sf::Keyboard::Enter) {
+                                                    if (event.type == sf::Event::KeyReleased) {
+
+                                                        std::string rounds = keyRoundsCount.getString();
+                                                        std::string bots = keyBotsCount.getString();
+
+                                                        //std::vector<std::pair<std::string, std::string>> controlSettings;
+
+                                                        settings[4].second = rounds;
+                                                        settings[5].second = bots;
+
+                                                        std::ofstream outF("settings.ini");
+
+                                                        outF << serialize(settings);
+
+                                                        game.startSingleplayer(window, gameMenu_);
+                                                    }
+                                                }
+
+                                                break;
+                                            case 3:
+
+                                                if (event.type == sf::Event::KeyReleased) {
+                                                    singleplayer = false;
+                                                }
+                                                break;
+                                            }
+
+                                            keyRoundsCount.setFont(font);
+                                            setControl(keyRoundsCount, roundsCount, 360);
+                                            keyBotsCount.setFont(font);
+                                            setControl(keyBotsCount, botsCount, 460);
+
+                                            window.clear();
+                                            window.draw(background);
+                                            window.draw(titul);
+                                            singleplayerMenu.draw();
+                                            window.draw(keyRoundsCount);
+                                            window.draw(keyBotsCount);
+                                            window.display();
+                                        }
+                                    }
+                                    break;
+                                }
+                            case 1:break;
+                            case 2:
+                                gameMenu_.pressButton(name, 0);
+                                break;
+                            }
+                            }
                         }
-                        break;
+                    }
 
                     // Меню настроек.
                     case 2:
@@ -161,8 +272,6 @@ int main()
                             while (control) {
 
                                 sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
-
-
 
                                 while (window.pollEvent(event))
                                 {
@@ -234,16 +343,16 @@ int main()
                                                     std::string Down  = keyDown.getString();
                                                     std::string Right = keyRight.getString();
 
-                                                    std::vector<std::pair<std::string, std::string>> controlSettings;
+                                                    //std::vector<std::pair<std::string, std::string>> controlSettings;
 
-                                                    controlSettings.push_back(std::pair("Up", Up));
-                                                    controlSettings.push_back(std::pair("Left", Left));
-                                                    controlSettings.push_back(std::pair("Down", Down));
-                                                    controlSettings.push_back(std::pair("Right", Right));
+                                                    settings[0].second = Up;
+                                                    settings[1].second = Left;
+                                                    settings[2].second = Down;
+                                                    settings[3].second = Right;
 
                                                     std::ofstream outF("settings.ini");
 
-                                                    outF << serialize(controlSettings);
+                                                    outF << serialize(settings);
                                                 }
                                                 break;
                                             case 5:
