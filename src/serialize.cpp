@@ -8,6 +8,8 @@ std::string serialize(std::vector<std::pair<std::string, std::string>> data)
 		result += elem.first + ":" + elem.second + "\n";
 	}
 
+	result = result.substr(0, result.rfind("\n"));
+
 	return result;
 }
 

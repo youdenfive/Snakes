@@ -63,7 +63,7 @@ int main()
     
     // Инициализирует текст вложенных меню
     std::vector<sf::String> startGameName = { "SINGLEPLAYER", "MULTIPLAYER", "GO BACK" };
-    std::vector<sf::String> settingsGameName = { "CONTROL", "THEME", "GO BACK"};
+    std::vector<sf::String> settingsGameName = { "NICKNAME", "CONTROL", "THEME", "GO BACK"};
     std::vector<sf::String> aboutGameName = { "GO BACK" };
 
     // Инициализирует меню управления.
@@ -76,6 +76,7 @@ int main()
     gameMenu singleplayerMenu(window, 950, 350, singleplayerName, 100, 70);
     singleplayerMenu.alignTextMenu(2);
 
+    sf::Text nickname;
     sf::Text keyUp;
     sf::Text keyLeft;
     sf::Text keyDown;
@@ -87,6 +88,8 @@ int main()
     sf::String keyName;
     Snake snake;
     singleplayer game(snake);
+
+    bool isSettings = false;
 
     // Отрисовывает окно.
     while (window.isOpen())
@@ -129,7 +132,7 @@ int main()
                 if (event.key.code == sf::Keyboard::Enter) {
                     switch (gameMenu_.getMode()) {
 
-                    // Главное меню.
+                        // Главное меню.
                     case 0:
                         switch (gameMenu_.getSelected()) {
                         case 0:
@@ -147,125 +150,154 @@ int main()
                         }
                         break;
 
-                    // Меню начала игры.
+                        // Меню начала игры.
                     case 1: {
 
-                        bool singleplayer = true;
-
-                        // Обрабатывает нажатие кнопки.
-                        sf::String roundsCount = settings[4].second;
-                        sf::String botsCount = settings[5].second;
-
-                        if (event.key.code == sf::Keyboard::Enter) {
-                            switch (gameMenu_.getSelected()) {
-                            case 0: {
-
-                                while (singleplayer) {
-
-                                    sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
-
-
-
-                                    while (window.pollEvent(event))
-                                    {
-                                        // Закрывает окно.
-                                        if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
-                                            window.close();
-
-                                        // Обрабатывает нажатие кнопки.
-                                        if (event.type == sf::Event::KeyReleased) {
-
-                                            // Выбор нижестоящей кнопки.
-                                            if (event.key.code == sf::Keyboard::Up) {
-                                                singleplayerMenu.moveUp();
-                                            }
-
-                                            // Выбор нижестоящей кнопки.
-                                            if (event.key.code == sf::Keyboard::Down) {
-                                                singleplayerMenu.moveDown();
-                                            }
-
-
-
-                                            switch (singleplayerMenu.getSelected()) {
-
-
-                                            case 0:
-                                                if (event.type == sf::Event::KeyReleased) {
-                                                    code = event.key.scancode;
-                                                    if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
-                                                        roundsCount = sf::Keyboard::getDescription(code);
-                                                    }
-                                                }
-
-                                                break;
-                                            case 1:
-                                                if (event.type == sf::Event::KeyReleased) {
-                                                    code = event.key.scancode;
-                                                    if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
-                                                        botsCount = sf::Keyboard::getDescription(code);
-                                                    }
-                                                }
-
-                                                break;
-                                            case 2:
-                                                if (event.key.code == sf::Keyboard::Enter) {
-                                                    if (event.type == sf::Event::KeyReleased) {
-
-                                                        std::string rounds = keyRoundsCount.getString();
-                                                        std::string bots = keyBotsCount.getString();
-
-                                                        //std::vector<std::pair<std::string, std::string>> controlSettings;
-
-                                                        settings[4].second = rounds;
-                                                        settings[5].second = bots;
-
-                                                        std::ofstream outF("settings.ini");
-
-                                                        outF << serialize(settings);
-
-                                                        game.startSingleplayer(window, gameMenu_);
-                                                    }
-                                                }
-
-                                                break;
-                                            case 3:
-
-                                                if (event.type == sf::Event::KeyReleased) {
-                                                    singleplayer = false;
-                                                }
-                                                break;
-                                            }
-
-                                            keyRoundsCount.setFont(font);
-                                            setControl(keyRoundsCount, roundsCount, 360);
-                                            keyBotsCount.setFont(font);
-                                            setControl(keyBotsCount, botsCount, 460);
-
-                                            window.clear();
-                                            window.draw(background);
-                                            window.draw(titul);
-                                            singleplayerMenu.draw();
-                                            window.draw(keyRoundsCount);
-                                            window.draw(keyBotsCount);
-                                            window.display();
-                                        }
-                                    }
-                                    break;
-                                }
-                            case 1:break;
-                            case 2:
-                                gameMenu_.pressButton(name, 0);
-                                break;
-                            }
-                            }
-                        }
-                    }
-
-                    // Меню настроек.
-                    case 2:
                         switch (gameMenu_.getSelected()) {
                         case 0: {
+
+                            bool singleplayer = true;
+
+                            // Обрабатывает нажатие кнопки.
+                            sf::String roundsCount = settings[4].second;
+                            sf::String botsCount = settings[5].second;
+
+                            //if (event.key.code == sf::Keyboard::Enter) {
+
+
+                            while (singleplayer) {
+
+                                sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+
+
+
+                                while (window.pollEvent(event))
+                                {
+                                    // Закрывает окно.
+                                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+                                        window.close();
+
+                                    // Обрабатывает нажатие кнопки.
+                                    if (event.type == sf::Event::KeyReleased) {
+
+                                        // Выбор нижестоящей кнопки.
+                                        if (event.key.code == sf::Keyboard::Up) {
+                                            singleplayerMenu.moveUp();
+                                        }
+
+                                        // Выбор нижестоящей кнопки.
+                                        if (event.key.code == sf::Keyboard::Down) {
+                                            singleplayerMenu.moveDown();
+                                        }
+
+                                        switch (singleplayerMenu.getSelected()) {
+
+                                        case 0:
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+                                                    roundsCount = sf::Keyboard::getDescription(code);
+                                                }
+                                            }
+
+                                            break;
+                                        case 1:
+                                            if (event.type == sf::Event::KeyReleased) {
+                                                code = event.key.scancode;
+                                                if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+                                                    botsCount = sf::Keyboard::getDescription(code);
+                                                }
+                                            }
+
+                                            break;
+                                        case 2:
+                                            if (event.key.code == sf::Keyboard::Enter) {
+                                                if (event.type == sf::Event::KeyReleased) {
+
+                                                    std::string rounds = keyRoundsCount.getString();
+                                                    std::string bots = keyBotsCount.getString();
+
+                                                    //std::vector<std::pair<std::string, std::string>> controlSettings;
+
+                                                    settings[4].second = rounds;
+                                                    settings[5].second = bots;
+
+                                                    std::ofstream outF("settings.ini");
+
+                                                    outF << serialize(settings);
+
+                                                    outF.close();
+
+                                                    gameSingleplayerStart(window, game);
+                                                }
+                                            }
+
+                                            break;
+                                        case 3:
+
+                                            if (event.key.code == sf::Keyboard::Enter) {
+                                                singleplayer = false;
+                                            }
+                                            break;
+                                        }
+
+
+                                    }
+                                }
+                                keyRoundsCount.setFont(font);
+                                setControl(keyRoundsCount, roundsCount, 360);
+                                keyBotsCount.setFont(font);
+                                setControl(keyBotsCount, botsCount, 460);
+
+                                window.clear();
+                                window.draw(background);
+                                window.draw(titul);
+                                singleplayerMenu.draw();
+                                window.draw(keyRoundsCount);
+                                window.draw(keyBotsCount);
+                                window.display();
+                            }
+                            break;
+                        }
+                        case 1:break;
+                        case 2:
+                            gameMenu_.pressButton(name, 0);
+                            break;
+                        }
+                            break;
+                        }
+
+
+                        // Меню настроек.
+                    case 2:
+
+                        isSettings = true;
+
+                        switch (gameMenu_.getSelected()) {
+                        case 0: {
+                            if (event.type == sf::Event::KeyReleased) {
+
+                                auto code = event.key.scancode;
+                                sf::String nick = settings[6].second;
+
+                                if (sf::Keyboard::getDescription(code) == "Enter") {
+                                    nick = "";
+                                }
+
+                                
+                                if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down" && sf::Keyboard::getDescription(code) != "Backspace") {
+                                    nick += sf::Keyboard::getDescription(code);
+                                }
+
+                                if (sf::Keyboard::getDescription(code) == "Backspace") {
+                                    nick = nick.substring(0, nick.getSize() - 1);
+                                }
+                            }
+
+                            break;
+                        }
+
+                        case 1: {
                             bool control = true;
 
                             // Обрабатывает нажатие кнопки.
@@ -307,16 +339,16 @@ int main()
                                                 }
                                             }
 
-                                                break;
+                                            break;
                                         case 1:
                                             if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
                                                 if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
                                                     keyL = sf::Keyboard::getDescription(code);
                                                 }
-                                                }
+                                            }
 
-                                                break;
+                                            break;
                                         case 2:
                                             if (event.type == sf::Event::KeyReleased) {
                                                 code = event.key.scancode;
@@ -325,7 +357,7 @@ int main()
                                                 }
                                             }
 
-                                                break;
+                                            break;
                                         case 3:
 
                                             if (event.type == sf::Event::KeyReleased) {
@@ -335,36 +367,38 @@ int main()
                                                 }
                                             }
 
-                                                break;
+                                            break;
 
-                                            case 4:
-                                                if (event.key.code == sf::Keyboard::Enter) {
+                                        case 4:
+                                            if (event.key.code == sf::Keyboard::Enter) {
 
-                                                    std::string Up    = keyUp.getString();
-                                                    std::string Left  = keyLeft.getString();
-                                                    std::string Down  = keyDown.getString();
-                                                    std::string Right = keyRight.getString();
+                                                std::string Up = keyUp.getString();
+                                                std::string Left = keyLeft.getString();
+                                                std::string Down = keyDown.getString();
+                                                std::string Right = keyRight.getString();
 
-                                                    //std::vector<std::pair<std::string, std::string>> controlSettings;
+                                                //std::vector<std::pair<std::string, std::string>> controlSettings;
 
-                                                    settings[0].second = Up;
-                                                    settings[1].second = Left;
-                                                    settings[2].second = Down;
-                                                    settings[3].second = Right;
+                                                settings[0].second = Up;
+                                                settings[1].second = Left;
+                                                settings[2].second = Down;
+                                                settings[3].second = Right;
 
-                                                    std::ofstream outF("settings.ini");
+                                                std::ofstream outF("settings.ini");
 
-                                                    outF << serialize(settings);
-                                                }
-                                                break;
-                                            case 5:
-                                                if (event.key.code == sf::Keyboard::Enter) {
-                                                    control = false;
-                                                }
-                                                break;
+                                                outF << serialize(settings);
+
+                                                outF.close();
                                             }
+                                            break;
+                                        case 5:
+                                            if (event.key.code == sf::Keyboard::Enter) {
+                                                control = false;
+                                            }
+                                            break;
                                         }
-                                    
+                                    }
+
                                 }
 
                                 keyLeft.setFont(font);
@@ -388,14 +422,22 @@ int main()
                             }
                             break;
                         }
-                        case 1:break;
-                        case 2:
+                        case 2:break;
+                        case 3:
+                            isSettings = false;
+
+                            std::ofstream outF("settings.ini");
+
+                            outF << serialize(settings);
+
+                            outF.close();
+
                             gameMenu_.pressButton(name, 0);
                             break;
                         }
                         break;
 
-                    // Меню "about".
+                        // Меню "about".
                     case 3:
                         switch (gameMenu_.getSelected()) {
                         case 0:
@@ -404,6 +446,7 @@ int main()
                         }
                         break;
                     }
+                    
 
                 }
             }
@@ -411,6 +454,11 @@ int main()
 
         // Отрисовка.
         window.clear();
+
+        if (isSettings) {
+            window.draw(nickname);
+        }
+
         window.draw(background);
         window.draw(titul);
         gameMenu_.draw();
