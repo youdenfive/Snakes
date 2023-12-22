@@ -25,10 +25,14 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
 
 void setControl(sf::Text& key, sf::String keyName, float ypos);
 
+int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game);
+
 int main()
 {
     // Создаем окно игры.
-    sf::RenderWindow window(sf::VideoMode(1600, 1000), "SNAKES");
+    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "SNAKES", sf::Style::Fullscreen);
+
+    window.setFramerateLimit(60);
 
     // Делаем курсор невидимым.
     window.setMouseCursorVisible(false);
@@ -276,7 +280,7 @@ int main()
                                 while (window.pollEvent(event))
                                 {
                                     // Закрывает окно.
-                                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+                                    if (event.type == sf::Event::Closed)
                                         window.close();
 
                                     // Обрабатывает нажатие кнопки.
@@ -291,8 +295,6 @@ int main()
                                         if (event.key.code == sf::Keyboard::Down) {
                                             controlMenu.moveDown();
                                         }
-
-
 
                                         switch (controlMenu.getSelected()) {
 
@@ -432,4 +434,16 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
 void setControl(sf::Text& key, sf::String keyName, float ypos)
 {
     InitText(key, 1000, ypos, keyName, 55, sf::Color::Yellow, 3, sf::Color(40, 40, 40));
+}
+
+int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game)
+{
+    int result = game.startSingleplayer(window);
+    switch (result) {
+    case 2 :
+            gameSingleplayerStart(window, game);
+    case 0 :
+        return 1;
+    }
+    return 1;
 }

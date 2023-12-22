@@ -30,7 +30,7 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
     initFont();  // Вызываем метод для инициализации шрифта
 };
 
-int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
+int singleplayer::startSingleplayer(sf::RenderWindow& window)
 {
 
     window.setFramerateLimit(10);
@@ -48,11 +48,64 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
     // Установка начального интервала обновления
     game.updateSpeed();
 
+    // Инициализирует текст вложенных меню
+    std::vector<sf::String> gamePauseName = { "CONTINUE", "RESTART", "GO TO MENU"};
+    gameMenu gamePauseMenu(window, 950, 550, gamePauseName, 100, 70);
+    gamePauseMenu.setColor(sf::Color::Yellow, sf::Color(40, 40, 40), sf::Color::Yellow);
+    gamePauseMenu.alignTextMenu(1);
+
+    bool pause = false;
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
+            if (event.type == sf::Event::Closed) {
                 window.close();
+            }
+        }
+
+        // 
+        if (event.key.code == sf::Keyboard::Escape) {
+            pause = true;
+
+            while (pause) {
+
+                while (window.pollEvent(event)) {
+
+                    if (event.type == sf::Event::KeyReleased) {
+                        // Выбор нижестоящей кнопки.
+                        if (event.key.code == sf::Keyboard::Up) {
+                            gamePauseMenu.moveUp();
+                        }
+
+                        // Выбор нижестоящей кнопки.
+                        if (event.key.code == sf::Keyboard::Down) {
+                            gamePauseMenu.moveDown();
+                        }
+
+                        if (event.key.code == sf::Keyboard::Enter) {
+                            if (gamePauseMenu.getSelected() == 0) {
+                                pause = false;
+                                break;
+                            }
+
+                            switch (gamePauseMenu.getSelected()) {
+                            case 1:
+                                return 2;
+                                break;
+
+                            case 2:
+                                //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
+                                //menu.pressButton(name, 0);
+                                return 0;
+                            }
+                        }
+                    }
+                }
+
+                window.clear();
+                gamePauseMenu.draw();
+                window.display();
             }
         }
 
@@ -77,7 +130,6 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
         gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
         gameOverMenu.setColor(sf::Color::Red, sf::Color(220,220,220), sf::Color::Red);
         gameOverMenu.alignTextMenu(1);
-
 
         // Проверка на столкновение
         while (game.checkCollision()) {
@@ -122,13 +174,13 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window, gameMenu& menu)
                     if (event.key.code == sf::Keyboard::Enter) {
                         switch (gameOverMenu.getSelected()) {
                         case 0:
-                            game.startSingleplayer(window, menu);
-                            return snake.getLength();
+                            //game.startSingleplayer(window);
+                            return 2;
 
                         case 1:
-                            std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                            menu.pressButton(name, 0);
-                            return snake.getLength();
+                            //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
+                            //menu.pressButton(name, 0);
+                            return 0;
                         }
                     }
                 }
@@ -266,6 +318,7 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
     // Отрисовка яблока
     window.draw(appleSprite);
 }
+
 void singleplayer::initTextures() {
     if (!snakeTexture.loadFromFile("../designe/snake.png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
