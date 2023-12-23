@@ -3,19 +3,20 @@
 
 singleplayer::singleplayer(Snake _snake) : snake(_snake)
 {     
+    auto settings = getSettings();
 
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
 
     // Инициализация прямоугольника границ
-    border.setSize(sf::Vector2f(width - 2 * CELL_SIZE, height - 2 * CELL_SIZE));
+    border.setSize(sf::Vector2f(width - 2 * stoi(settings[8].second) * CELL_SIZE, height - 2 * stoi(settings[8].second) * CELL_SIZE));
     border.setFillColor(sf::Color::Transparent);  // Прозрачный цвет
     border.setOutlineColor(sf::Color::Yellow);      // Цвет границ
-    border.setOutlineThickness(CELL_SIZE);              // Толщина границ
+    border.setOutlineThickness(stoi(settings[8].second) * CELL_SIZE);              // Толщина границ
 
     // Установка позиции прямоугольника границ, чтобы он оставался внутри экрана
-    border.setPosition(CELL_SIZE, CELL_SIZE);
+    border.setPosition(stoi(settings[8].second) * CELL_SIZE, stoi(settings[8].second) * CELL_SIZE);
 
     // Загружаем шрифт
     if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
@@ -34,6 +35,25 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 {
 
     window.setFramerateLimit(10);
+
+    std::ifstream inpF("settings.ini");
+
+    std::string settingsStr = "";
+
+    while (!inpF.eof()) {
+        std::string temp;
+        inpF >> temp;
+        settingsStr += temp + "\n";
+    }
+
+    auto settings = unserialize(settingsStr);
+
+    sf::Text nickname;
+    nickname.setFont(font);
+    nickname.setCharacterSize(30);
+    nickname.setFillColor(sf::Color::White);
+    nickname.setPosition(860, 10 + CELL_SIZE);
+    nickname.setString(settings[6].second);
 
     // Инициализация генератора случайных чисел
     srand(static_cast<unsigned>(time(nullptr)));
@@ -195,6 +215,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
         // Отрисовка
         window.clear();
+        window.draw(nickname);
         game.draw(window);
         window.display();
     }
