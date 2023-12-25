@@ -267,11 +267,11 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
     window.draw(appleSprite);
 }
 void singleplayer::initTextures() {
-    if (!snakeTexture.loadFromFile("../designe/snake.png")) {
+    if (!snakeTexture.loadFromFile("../designe/snake2.png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
     }
 
-    if (!appleTexture.loadFromFile("../designe/apple.png")) {
+    if (!appleTexture.loadFromFile("../designe/apple1.png")) {
         std::cerr << "Failed to load apple texture." << std::endl;
     }
 
