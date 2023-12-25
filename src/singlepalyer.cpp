@@ -67,8 +67,6 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
     int roundsCount = stoi(settings[4].second);
 
     for (int roundNumber = 1; roundNumber <= roundsCount; ++roundNumber) {
-        Snake snake;
-        singleplayer game(snake);
 
         sf::Text round;
         round.setFont(font);
@@ -77,12 +75,15 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         round.setPosition(1560, 10 + CELL_SIZE);
         round.setString("Round: " + std::to_string(roundNumber) + '/' + std::to_string(roundsCount));
 
+        deleteWalls();
+        snake.setDefaultSnake();
+
         // Добавление стен
-        game.map();
-        game.initTextures();
-        game.createSprites();
+        map();
+        initTextures();
+        createSprites();
         // Установка начального интервала обновления
-        game.updateSpeed();
+        updateSpeed();
 
         // Инициализирует текст вложенных меню
         std::vector<sf::String> gamePauseName = { "CONTINUE", "RESTART", "GO TO MENU" };
@@ -150,14 +151,14 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
                 auto key = event.key.scancode;
 
                 // После обработки событий ввода, обновляйте состояние кнопок
-                game.handleInput(window, key);
+                handleInput(window, key);
             }
 
             // Обновление положения яблока, чтобы избежать столкновения с стенами
-            game.getApple().respawn(game.getWalls());
+            getApple().respawn(getWalls());
 
             // Движение змейки
-            game.move();
+            move();
 
             updateSpeed(); // Вызываем для начальной установки интервала обновления
 
@@ -167,14 +168,14 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
             gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
             gameOverMenu.alignTextMenu(1);
 
-            if (game.checkCollision() && roundNumber < roundsCount) {
-                score = score + game.getSnake().getBody().size() - 3;
+            if (checkCollision() && roundNumber < roundsCount) {
+                score = score + getSnake().getBody().size() - 3;
                 break;
             }
 
 
             // Проверка на столкновение
-            while (game.checkCollision()) {
+            while (checkCollision()) {
 
                 std::cout << "Game Over!" << std::endl;
 
@@ -182,17 +183,17 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
                 // Отображение "Game Over" и длины змейки
                 sf::Text gameOverText;
-                gameOverText.setFont(game.getFont());
+                gameOverText.setFont(getFont());
                 gameOverText.setCharacterSize(40);
                 gameOverText.setFillColor(sf::Color::Red);
                 gameOverText.setString("Game Over!");
                 gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
 
                 sf::Text lengthText;
-                lengthText.setFont(game.getFont());
+                lengthText.setFont(getFont());
                 lengthText.setCharacterSize(20);
                 lengthText.setFillColor(sf::Color::White);
-                lengthText.setString("Score: " + std::to_string(score + game.getSnake().getBody().size() - 3));
+                lengthText.setString("Score: " + std::to_string(score + getSnake().getBody().size() - 3));
                 lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
 
                 while (window.pollEvent(event)) {
@@ -217,7 +218,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
                         if (event.key.code == sf::Keyboard::Enter) {
                             switch (gameOverMenu.getSelected()) {
                             case 0:
-                                //game.startSingleplayer(window);
+                                //startSingleplayer(window);
                                 return 2;
 
                             case 1:
@@ -240,7 +241,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
             window.clear();
             window.draw(nickname);
             window.draw(round);
-            game.draw(window, score);
+            draw(window, score);
             window.display();
         }
     }
@@ -415,4 +416,9 @@ void singleplayer::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode 
 Snake singleplayer::getSnake()
 {
     return this->snake;
+}
+
+void singleplayer::deleteWalls()
+{
+    walls.clear();
 }

@@ -56,49 +56,156 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
 
     bool pause = false;
 
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-            if (event.type == sf::Event::KeyPressed) {
-                auto key = event.key.scancode;
-                handleInput(window, key, player1);
-                handleInput(window, key, player2);
-            }
-        }
-        
-        if (event.key.code == sf::Keyboard::Escape) {
-            pause = true;
+    std::vector<std::pair<std::string, std::string>> settings;
 
-            while (pause) {
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
+    auto roundsCount = std::stoi(settings[4].second);
+
+    int score1 = 0;
+    int score2 = 0;
+
+    for (int roundNumber = 1; roundNumber <= roundsCount; ++roundNumber) {
+
+        sf::Text round;
+        round.setFont(font);
+        round.setCharacterSize(30);
+        round.setFillColor(sf::Color::White);
+        round.setPosition(1560, 10 + CELL_SIZE);
+        round.setString("Round: " + std::to_string(roundNumber) + '/' + std::to_string(roundsCount));
+
+        player1.setDefaultSnake(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
+        player2.setDefaultSnake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
+
+        while (window.isOpen()) {
+            sf::Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == sf::Event::Closed) {
+                    window.close();
+                }
+                if (event.type == sf::Event::KeyPressed) {
+                    auto key = event.key.scancode;
+                    handleInput(window, key, player1);
+                    handleInput(window, key, player2);
+                }
+            }
+
+            if (event.key.code == sf::Keyboard::Escape) {
+                pause = true;
+
+                while (pause) {
+
+                    while (window.pollEvent(event)) {
+
+                        if (event.type == sf::Event::KeyReleased) {
+                            // Выбор нижестоящей кнопки.
+                            if (event.key.code == sf::Keyboard::Up) {
+                                gamePauseMenu.moveUp();
+                            }
+
+                            // Выбор нижестоящей кнопки.
+                            if (event.key.code == sf::Keyboard::Down) {
+                                gamePauseMenu.moveDown();
+                            }
+
+                            if (event.key.code == sf::Keyboard::Enter) {
+                                if (gamePauseMenu.getSelected() == 0) {
+                                    pause = false;
+                                    break;
+                                }
+
+                                switch (gamePauseMenu.getSelected()) {
+                                case 1:
+                                    return 2;
+                                    break;
+
+                                case 2:
+                                    //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
+                                    //menu.pressButton(name, 0);
+                                    return 0;
+                                }
+                            }
+                        }
+                    }
+
+                    window.clear();
+                    gamePauseMenu.draw();
+                    window.display();
+                }
+            }
+
+            // Обновление положения яблока, чтобы избежать столкновения с стенами
+            getApple().respawn(getWalls());
+
+            move();
+
+            updateSpeed(); // Вызываем для начальной установки интервала обновления
+
+            // Инициализирует текст вложенных меню
+            std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
+            gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
+            gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
+            gameOverMenu.alignTextMenu(1);
+
+            if (checkCollision() && roundNumber < roundsCount) {
+                score1 = score1 + getPlayer1().getBody().size() - 3;
+                score2 = score2 + getPlayer2().getBody().size() - 3;
+                break;
+            }
+
+            // Проверка на столкновение
+            while (checkCollision()) {
+                std::cout << "Game Over!" << std::endl;
+
+                window.clear();
+
+                // Отображение "Game Over" и длины змейки
+                sf::Text gameOverText;
+                gameOverText.setFont(getFont());
+                gameOverText.setCharacterSize(40);
+                gameOverText.setFillColor(sf::Color::Red);
+                std::string winString = (collision != "nobody") ? collision + " win!" : collision + " wins..";
+                gameOverText.setString(winString);
+                gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
+
+                sf::Text lengthText;
+                lengthText.setFont(getFont());
+                lengthText.setCharacterSize(20);
+                lengthText.setFillColor(sf::Color::White);
+                lengthText.setString("Length: " + std::to_string(score()));
+                lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
 
                 while (window.pollEvent(event)) {
+                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
+                        window.close();
+                        return EXIT_SUCCESS;
+                    }
 
+                    // Обрабатывает нажатие кнопки.
                     if (event.type == sf::Event::KeyReleased) {
+
                         // Выбор нижестоящей кнопки.
                         if (event.key.code == sf::Keyboard::Up) {
-                            gamePauseMenu.moveUp();
+                            gameOverMenu.moveUp();
                         }
 
                         // Выбор нижестоящей кнопки.
                         if (event.key.code == sf::Keyboard::Down) {
-                            gamePauseMenu.moveDown();
+                            gameOverMenu.moveDown();
                         }
 
                         if (event.key.code == sf::Keyboard::Enter) {
-                            if (gamePauseMenu.getSelected() == 0) {
-                                pause = false;
-                                break;
-                            }
-
-                            switch (gamePauseMenu.getSelected()) {
-                            case 1:
+                            switch (gameOverMenu.getSelected()) {
+                            case 0:
+                                //startSingleplayer(window);
                                 return 2;
-                                break;
 
-                            case 2:
+                            case 1:
                                 //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
                                 //menu.pressButton(name, 0);
                                 return 0;
@@ -107,92 +214,19 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
                     }
                 }
 
-                window.clear();
-                gamePauseMenu.draw();
+                window.draw(gameOverText);
+                window.draw(lengthText);
+                gameOverMenu.draw();
+
                 window.display();
             }
-        }
 
-        // Обновление положения яблока, чтобы избежать столкновения с стенами
-        getApple().respawn(getWalls());
-
-        move();
-
-        updateSpeed(); // Вызываем для начальной установки интервала обновления
-
-        // Инициализирует текст вложенных меню
-        std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
-        gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
-        gameOverMenu.setColor(sf::Color::Red, sf::Color(220,220,220), sf::Color::Red);
-        gameOverMenu.alignTextMenu(1);
-
-        // Проверка на столкновение
-        while (checkCollision()) {
-            std::cout << "Game Over!" << std::endl;
-
+            // Отрисовка
             window.clear();
-
-            // Отображение "Game Over" и длины змейки
-            sf::Text gameOverText;
-            gameOverText.setFont(getFont());
-            gameOverText.setCharacterSize(40);
-            gameOverText.setFillColor(sf::Color::Red);
-            std::string winString = (collision != "nobody") ? collision + " win!" : collision + " wins..";
-            gameOverText.setString(winString);
-            gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
-
-            sf::Text lengthText;
-            lengthText.setFont(getFont());
-            lengthText.setCharacterSize(20);
-            lengthText.setFillColor(sf::Color::White);
-            lengthText.setString("Length: " + std::to_string(score()));
-            lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
-
-            while (window.pollEvent(event)) {
-                if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
-                    window.close();
-                    return EXIT_SUCCESS;
-                }
-
-                // Обрабатывает нажатие кнопки.
-                if (event.type == sf::Event::KeyReleased) {
-
-                    // Выбор нижестоящей кнопки.
-                    if (event.key.code == sf::Keyboard::Up) {
-                        gameOverMenu.moveUp();
-                    }
-
-                    // Выбор нижестоящей кнопки.
-                    if (event.key.code == sf::Keyboard::Down) {
-                        gameOverMenu.moveDown();
-                    }
-
-                    if (event.key.code == sf::Keyboard::Enter) {
-                        switch (gameOverMenu.getSelected()) {
-                        case 0:
-                            //startSingleplayer(window);
-                            return 2;
-
-                        case 1:
-                            //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                            //menu.pressButton(name, 0);
-                            return 0;
-                        }
-                    }
-                }
-            }
-
-            window.draw(gameOverText);
-            window.draw(lengthText);
-            gameOverMenu.draw();
-
+            window.draw(round);
+            draw(window, sf::Vector2i(score1, score2));
             window.display();
         }
-
-        // Отрисовка
-        window.clear();
-        draw(window);
-        window.display();
     }
 
     return score();
@@ -328,17 +362,17 @@ void twoPlayaGame::move() {
     createSprites();
 }
 
-void twoPlayaGame::draw(sf::RenderWindow& window) {
+void twoPlayaGame::draw(sf::RenderWindow& window, sf::Vector2i playersScore) {
     // Отрисовка стен и яблока
     drawSprites(window);
 
     // Отображение количества клеток змейки
-    lengthText.setString(playa1name + ":" + std::to_string(player1.getBody().size()));
+    lengthText.setString(playa1name + ":" + std::to_string(playersScore.x + getPlayer1().getBody().size() - 3));
     lengthText.setPosition(10 + CELL_SIZE, 10 + CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 
     // Отображение количества клеток змейки
-    lengthText.setString(playa2name + ":" + std::to_string(player2.getBody().size()));
+    lengthText.setString(playa2name + ":" + std::to_string(playersScore.y + getPlayer2().getBody().size() - 3));
     lengthText.setPosition(10 + CELL_SIZE, 10 + 2*CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 

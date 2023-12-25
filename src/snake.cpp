@@ -5,10 +5,15 @@ std::size_t Snake::getLength() const {
 }
 
 Snake::Snake() {
+    setDefaultSnake();
+}
+
+Snake::Snake(sf::Vector2f startPosition, const std::vector<std::pair<std::string, std::string>>& control)
+    : _control(control) {
     // Создаем начальную длину змейки
     for (int i = 0; i < 3; ++i) {
         sf::RectangleShape segment(sf::Vector2f(CELL_SIZE, CELL_SIZE));
-        segment.setPosition(WIDTH / 2 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE + i * CELL_SIZE);
+        segment.setPosition(startPosition);
         segment.setFillColor(sf::Color::Green);
         body.push_front(segment);
     }
@@ -16,12 +21,16 @@ Snake::Snake() {
     // Начальное направление движения
     direction = sf::Vector2f(0, SPEED);
 }
-Snake::Snake(sf::Vector2f startPosition, const std::vector<std::pair<std::string, std::string>>& control)
-    : _control(control) {
+
+void Snake::setDefaultSnake(sf::Vector2f pos)
+{
+
+    body.clear();
+
     // Создаем начальную длину змейки
     for (int i = 0; i < 3; ++i) {
         sf::RectangleShape segment(sf::Vector2f(CELL_SIZE, CELL_SIZE));
-        segment.setPosition(startPosition);
+        segment.setPosition(pos);
         segment.setFillColor(sf::Color::Green);
         body.push_front(segment);
     }

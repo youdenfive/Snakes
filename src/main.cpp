@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "settings.h"
+#include "twoPlayaGame.h"
 
 /**
 *   Инициализирует название игры в меню.
@@ -43,7 +44,7 @@ int main()
 	// Устанавливает задний фон меню.
 	sf::RectangleShape background(sf::Vector2f(width, height));
 	sf::Texture texture_window;
-	if (!texture_window.loadFromFile("../designe/background_menu.jpg")) return 4;
+	if (!texture_window.loadFromFile("../designe/background_menu1.jpg")) return 4;
 	background.setTexture(&texture_window);
 
 	// Устанавливает шрифт.
@@ -124,6 +125,8 @@ int main()
 		catch(...) {
 			settings = setDefaultSettings();
 		}
+
+		twoPlayaGame multyGame(settings[6].second, settings[7].second);
 
 		// Обрабатывает события.
 		while (window.pollEvent(event))
@@ -288,7 +291,108 @@ int main()
 						}
 						break;
 					}
-					case 1:break;
+					case 1: {
+
+						bool multyplayer = true;
+
+						// Обрабатывает нажатие кнопки.
+						sf::String roundsCount = settings[4].second;
+						sf::String botsCount = settings[5].second;
+
+						while (multyplayer) {
+
+							sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+
+
+
+							while (window.pollEvent(event))
+							{
+								// Закрывает окно.
+								if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape)
+									window.close();
+
+								// Обрабатывает нажатие кнопки.
+								if (event.type == sf::Event::KeyReleased) {
+
+									// Выбор нижестоящей кнопки.
+									if (event.key.code == sf::Keyboard::Up) {
+										singleplayerMenu.moveUp();
+									}
+
+									// Выбор нижестоящей кнопки.
+									if (event.key.code == sf::Keyboard::Down) {
+										singleplayerMenu.moveDown();
+									}
+
+									switch (singleplayerMenu.getSelected()) {
+
+									case 0:
+										if (event.type == sf::Event::KeyReleased) {
+											code = event.key.scancode;
+											if (sf::Keyboard::getDescription(code) >= '1' && sf::Keyboard::getDescription(code) <= '9') {
+												roundsCount = sf::Keyboard::getDescription(code);
+											}
+										}
+
+										break;
+									case 1:
+										if (event.type == sf::Event::KeyReleased) {
+											code = event.key.scancode;
+											if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+												botsCount = sf::Keyboard::getDescription(code);
+											}
+										}
+
+										break;
+									case 2:
+
+										if (event.key.code != sf::Keyboard::Enter) {
+											break;
+										}
+
+										if (event.type == sf::Event::KeyReleased) {
+
+											std::string rounds = keyRoundsCount.getString();
+											std::string bots = keyBotsCount.getString();
+
+											//std::vector<std::pair<std::string, std::string>> controlSettings;
+
+											settings[4].second = rounds;
+											settings[5].second = bots;
+
+											setSettings(settings);
+
+											multyGame.startTwoPlayaGame(window);
+										}
+
+
+										break;
+									case 3:
+
+										if (event.key.code == sf::Keyboard::Enter) {
+											multyplayer = false;
+										}
+										break;
+									}
+
+
+								}
+							}
+							keyRoundsCount.setFont(font);
+							setControl(keyRoundsCount, roundsCount, 360);
+							keyBotsCount.setFont(font);
+							setControl(keyBotsCount, botsCount, 460);
+
+							window.clear();
+							window.draw(background);
+							window.draw(titul);
+							singleplayerMenu.draw();
+							window.draw(keyRoundsCount);
+							window.draw(keyBotsCount);
+							window.display();
+						}
+						break;
+					}
 					case 2:
 						gameMenu_.setPositionY(400);
 						gameMenu_.pressButton(name, 0);
@@ -375,7 +479,7 @@ int main()
 											}
 
 											if (sf::Keyboard::getDescription(code) == "Backspace") {
-												nick2 = nick2.substring(0, nick1.getSize() - 1);
+												nick2 = nick2.substring(0, nick2.getSize() - 1);
 												break;
 											}
 

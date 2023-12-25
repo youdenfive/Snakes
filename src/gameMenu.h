@@ -103,7 +103,7 @@ class gameMenu {
 		int getMode()
 		{
 			return _menuMode;
-		}
+		};
 
 		/**
 		*	Меняет содержимое меню.

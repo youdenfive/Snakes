@@ -59,6 +59,7 @@ protected:
     void drawSprites(sf::RenderWindow& window);
     void createSprites();
     Snake getSnake();
+    void deleteWalls();
 
 private:
     Snake snake;

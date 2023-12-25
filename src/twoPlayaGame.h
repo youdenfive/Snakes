@@ -27,6 +27,14 @@ public:
         return updateInterval;
     }
 
+    Snake getPlayer1() {
+        return player1;
+    }
+
+    Snake getPlayer2() {
+        return player2;
+    }
+
     Snake player1;
     Snake player2;
     std::string playa1name;
@@ -46,7 +54,7 @@ protected:
         return walls;
     }
 
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderWindow& window, sf::Vector2i playersScore);
 
     void move();
     void handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key, Snake& snake);
