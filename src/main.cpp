@@ -57,7 +57,7 @@ int main()
 
 	// Инициализирует главное меню.
 	std::vector<sf::String> name = {"START", "SETTINGS", "ABOUT", "EXIT" };
-	gameMenu gameMenu_(window, 950, 350, name, 130, 100);
+	gameMenu gameMenu_(window, 950, 400, name, 130, 100);
 	gameMenu_.alignTextMenu(1);
 	
 	// Инициализирует текст вложенных меню
@@ -80,11 +80,20 @@ int main()
 	gameMenu NicknamesMenu(window, 950, 350, NicknamesName, 100, 70);
 	NicknamesMenu.alignTextMenu(2);
 
-	// Инициализирует меню изменения имени игрока.
+	// Инициализирует меню изменения размера поля.
 	std::vector<sf::String> fieldName = { "BIG", "MEDIUM", "SMALL", "GO BACK" };
 	gameMenu fieldMenu(window, 950, 350, fieldName, 100, 70);
 	fieldMenu.alignTextMenu(1);
 
+	// Инициализирует меню выхода игрока.
+	std::vector<sf::String> exitGameName = { "GO BACK", "EXIT" };
+
+	sf::Text exit1;
+	exit1.setFont(font);
+	InitText(exit1, 380, 280, "DO YOU WANT TO", 100, sf::Color(40, 40, 40), 3, sf::Color::Yellow);
+	sf::Text exit2;
+	exit2.setFont(font);
+	InitText(exit2, 380, 400, "LEAVE THE GAME?", 100, sf::Color(40, 40, 40), 3, sf::Color::Yellow);
 
 	sf::Text nickname1;
 	sf::Text nickname2;
@@ -107,7 +116,14 @@ int main()
 	{
 		sf::Event event;
 
-		auto settings = getSettings();
+		std::vector<std::pair<std::string, std::string>> settings;
+
+		try {
+			settings = getSettings();
+		}
+		catch(...) {
+			settings = setDefaultSettings();
+		}
 
 		// Обрабатывает события.
 		while (window.pollEvent(event))
@@ -142,16 +158,20 @@ int main()
 
 						switch (gameMenu_.getSelected()) {
 						case 0:
+							gameMenu_.setPositionY(450);
 							gameMenu_.pressButton(startGameName, 1);
 							break;
 						case 1:
+							gameMenu_.setPositionY(350);
 							gameMenu_.pressButton(settingsGameName, 2);
 							break;
 						case 2:
+							gameMenu_.setPositionY(550);
 							gameMenu_.pressButton(aboutGameName, 3);
 							break;
 						case 3:
-							window.close();
+							gameMenu_.setPositionY(550);
+							gameMenu_.pressButton(exitGameName, 4);
 							break;
 						}
 					
@@ -204,7 +224,7 @@ int main()
 									case 0:
 										if (event.type == sf::Event::KeyReleased) {
 											code = event.key.scancode;
-											if (sf::Keyboard::getDescription(code) >= '0' && sf::Keyboard::getDescription(code) <= '9') {
+											if (sf::Keyboard::getDescription(code) >= '1' && sf::Keyboard::getDescription(code) <= '9') {
 												roundsCount = sf::Keyboard::getDescription(code);
 											}
 										}
@@ -270,6 +290,7 @@ int main()
 					}
 					case 1:break;
 					case 2:
+						gameMenu_.setPositionY(400);
 						gameMenu_.pressButton(name, 0);
 						break;
 					}
@@ -595,6 +616,7 @@ int main()
 							break;
 						}
 
+						gameMenu_.setPositionY(400);
 						gameMenu_.pressButton(name, 0);
 						break;
 					}
@@ -606,13 +628,28 @@ int main()
 				case 3:
 					switch (gameMenu_.getSelected()) {
 					case 0:
+						gameMenu_.setPositionY(400);
 						gameMenu_.pressButton(name, 0);
 						break;
 					}
 					break;
-				}
 				
+				
+				case 4:
+					if (event.key.code != sf::Keyboard::Enter) {
+						break;
+					}
 
+					switch (gameMenu_.getSelected()) {
+					case 0:
+						gameMenu_.setPositionY(400);
+						gameMenu_.pressButton(name, 0);
+						break;
+					case 1:
+						window.close();
+						return 0;
+					}
+				}
 			
 			}
 		}
@@ -620,6 +657,12 @@ int main()
 		// Отрисовка.
 		window.clear();
 		window.draw(background);
+
+		if (gameMenu_.getMode() == 4) {
+			window.draw(exit1);
+			window.draw(exit2);
+		}
+
 		window.draw(titul);
 		gameMenu_.draw();
 		window.display();

@@ -116,6 +116,8 @@ class gameMenu {
 		*/
 		void pressButton(std::vector<sf::String> name, int mode, int align = 1);
 
+		void setPositionY(float ypos);
+
 	private:
 		float _menu_x;		// X-овая координата меню.
 		float _menu_y;		// Y-овая координата меню.

@@ -50,7 +50,7 @@ protected:
         return walls;
     }
 
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderWindow& window, int& score);
 
     void move();
     void handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key);
@@ -58,6 +58,7 @@ protected:
     void initTextures();
     void drawSprites(sf::RenderWindow& window);
     void createSprites();
+    Snake getSnake();
 
 private:
     Snake snake;
