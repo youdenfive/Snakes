@@ -4,11 +4,12 @@ std::size_t Snake::getLength() const {
     return body.size();
 }
 
-Snake::Snake() {
+Snake::Snake(sf::Vector2f startPosition, const std::vector<std::pair<std::string, std::string>>& control)
+    : control(control) {
     // Создаем начальную длину змейки
     for (int i = 0; i < 3; ++i) {
         sf::RectangleShape segment(sf::Vector2f(CELL_SIZE, CELL_SIZE));
-        segment.setPosition(WIDTH / 2 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE + i * CELL_SIZE);
+        segment.setPosition(startPosition);
         segment.setFillColor(sf::Color::Green);
         body.push_front(segment);
     }
@@ -40,7 +41,22 @@ void Snake::draw(sf::RenderWindow& window) {
 }
 
 
-void Snake::handleInput(sf::RenderWindow& window, std::vector<std::pair<std::string, std::string>> control, sf::Keyboard::Scancode key) {
+//void Snake::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key) {
+//    // Обработка нажатий клавиш
+//    if (sf::Keyboard::getDescription(key) == control[1].second && direction.x == 0) {
+//        direction = sf::Vector2f(-SPEED, 0);
+//    }
+//    else if (sf::Keyboard::getDescription(key) == control[3].second && direction.x == 0) {
+//        direction = sf::Vector2f(SPEED, 0);
+//    }
+//    else if (sf::Keyboard::getDescription(key) == control[0].second && direction.y == 0) {
+//        direction = sf::Vector2f(0, -SPEED);
+//    }
+//    else if (sf::Keyboard::getDescription(key) == control[2].second && direction.y == 0) {
+//        direction = sf::Vector2f(0, SPEED);
+//    }
+// //}
+void Snake::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key) {
     // Обработка нажатий клавиш
     if (sf::Keyboard::getDescription(key) == control[1].second && direction.x == 0) {
         direction = sf::Vector2f(-SPEED, 0);
@@ -85,12 +101,21 @@ bool Snake::checkCollisionWithMyself() {
 
     sf::Vector2f headPosition = getHeadPosition();
 
-    // Проверка на столкновение с самой собой
-    for (auto it = std::next(body.begin()); it != body.end(); ++it) {
-        if (it->getPosition() == headPosition) {
+    // Проверяем, есть ли переданная позиция в теле змейки (кроме головы)
+    for (std::size_t i = 1; i < body.size(); ++i) {
+        if ((body[i].getPosition().x == headPosition.x) && (body[i].getPosition().y == headPosition.y)) {
             return true;
         }
     }
 
+    return false;
+}
+bool Snake::checkCollisionWithBody(const sf::Vector2f& position) const {
+    // Проверяем, есть ли переданная позиция в теле змейки (кроме головы)
+    for (std::size_t i = 1; i < body.size(); ++i) {
+        if (body[i].getPosition() == position) {
+            return true;
+        }
+    }
     return false;
 }
