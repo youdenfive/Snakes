@@ -1,7 +1,5 @@
 #include "serialize.h"
 
-//************************ менаундхлн реярхпнбюмхе ************************//
-
 std::string serialize(std::vector<std::pair<std::string, std::string>> data)
 {
 	std::string result = "";
@@ -9,6 +7,8 @@ std::string serialize(std::vector<std::pair<std::string, std::string>> data)
 	for (auto elem : data) {
 		result += elem.first + ":" + elem.second + "\n";
 	}
+
+	result = result.substr(0, result.rfind("\n"));
 
 	return result;
 }
@@ -31,5 +31,3 @@ std::vector<std::pair<std::string, std::string>> unserialize(std::string data)
 
 	return result;
 }
-
-//*************************************************************************//

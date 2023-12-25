@@ -8,9 +8,12 @@ void gameMenu::setInitText(sf::Text& mtext, sf::String str, float xpos, float yp
 	mtext.setPosition(xpos, ypos);
 	mtext.setFillColor(_unselected_color);
 	mtext.setCharacterSize(_size_font);
-	mtext.setPosition(xpos, ypos);
 	mtext.setOutlineThickness(3);
 	mtext.setOutlineColor(_border_color);
+}
+void gameMenu::setPositionY(float ypos)
+{
+	this->_menu_y = ypos;
 }
 
 gameMenu::gameMenu(sf::RenderWindow& window, float menuX, float menuY, std::vector<sf::String> name, int menu_step, int font_size):
@@ -118,4 +121,3 @@ void gameMenu::pressButton(std::vector<sf::String> name, int mode, int align)
 	this->setMode(mode);
 	this->alignTextMenu(align);
 }
-
