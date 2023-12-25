@@ -394,9 +394,9 @@ void twoPlayaGame::createSprites() {
 
 void twoPlayaGame::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key, Snake& snake)
 {
-    snake.handleInput(window, key);
-}
+    snake.handleInputTwo(window, key);
 
+}
 int twoPlayaGame::score() {
     if (playa1name == collision) {
         return player1.getLength();
