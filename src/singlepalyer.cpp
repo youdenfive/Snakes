@@ -2,7 +2,7 @@
 #include "singlepalyer.h"
 #include <string>
 
-singleplayer::singleplayer(Snake _snake) : snake(_snake)
+singleplayer::singleplayer(Snake _snake, bool _botIsOn) : snake(_snake), bot(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), {}), botIsOn(_botIsOn)
 {     
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -77,7 +77,9 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
         deleteWalls();
         snake.setDefaultSnake();
-
+        if (botIsOn) {
+            bot.setDefaultSnake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
+        }
         // Добавление стен
         map();
         initTextures();
@@ -156,6 +158,10 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
             // Обновление положения яблока, чтобы избежать столкновения с стенами
             getApple().respawn(getWalls());
+
+            if (botIsOn) {
+                bot.changeBotDirection(apple.getPosition(), walls);
+            }
 
             // Движение змейки
             move();
@@ -268,29 +274,62 @@ bool singleplayer::checkCollision() {
     float height = sf::VideoMode::getDesktopMode().height;
 
     // Проверка на столкновение с границами
-    sf::Vector2f headPosition = snake.getHeadPosition();
-    if (headPosition.x < CELL_SIZE || headPosition.x >= width - CELL_SIZE ||
-        headPosition.y < CELL_SIZE || headPosition.y >= height - CELL_SIZE) {
+    sf::Vector2f headPosition1 = snake.getHeadPosition();
+    if (headPosition1.x < CELL_SIZE || headPosition1.x >= width - CELL_SIZE ||
+        headPosition1.y < CELL_SIZE || headPosition1.y >= height - CELL_SIZE) {
         return true;
     }
+    if (botIsOn) {
+        // Проверка на столкновение с границами
+        sf::Vector2f headPosition2 = bot.getHeadPosition();
+        if (headPosition2.x < CELL_SIZE || headPosition2.x >= width - CELL_SIZE ||
+            headPosition2.y < CELL_SIZE || headPosition2.y >= height - CELL_SIZE) {
+            return true;
+        }
 
-    // Проверка столкновения с стенами
-    for (const auto& wall : walls) {
-        if (headPosition == wall.getPosition()) {
+        // Проверка на столкновение голов
+        float distance = std::hypot(headPosition1.x - headPosition2.x, headPosition1.y - headPosition2.y);
+        float minDistance = 0;  // Установите подходящее значение
+        if (distance <= minDistance) {
+            return true;
+        }
+        // Проверка столкновения с стенами
+        for (const auto& wall : walls) {
+            if (headPosition2 == wall.getPosition()) {
+                return true;
+            }
+        }
+        // Проверка на столкновение голов с телом
+        if (bot.checkCollisionWithBody(headPosition1)) {
+            return true;
+        }
+        if (bot.checkCollisionWithMyself()) {
+            return true;
+        }
+        if (snake.checkCollisionWithBody(headPosition2)) {
             return true;
         }
     }
+    // Проверка столкновения с стенами
+    for (const auto& wall : walls) {
+        if (headPosition1 == wall.getPosition()) {
+            return true;
+        }
+    }
+    
+    // Проверка на с самими собой
+    if (snake.checkCollisionWithMyself()) {
+        return true;
+    }
 
-    // Проверка на столкновение с самой собой
-    return snake.checkCollisionWithMyself() ? true : false;
+    return false;
 }
 
 void singleplayer::map() {
     for (int j = 0; j < 5; j++) {
-        for (int i = 0; i < 5; i++) {
-            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2) + 1) * CELL_SIZE, 
+        for (int i = 0; i < 5; i++)
+            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2) + 1) * CELL_SIZE,
                 static_cast<int>(rand() % (HEIGHT - 2) + 1) * CELL_SIZE));
-        }
     }
 }
 
@@ -303,19 +342,38 @@ void singleplayer::move() {
     sf::RectangleShape newHead = snake.getBody().front();
     newHead.move(snake.getDirection());
 
-    sf::Vector2f headPosition = newHead.getPosition();
+    sf::Vector2f headPosition1 = newHead.getPosition();
 
     // Проверка на поедание яблока
-    if (headPosition == apple.getPosition()) {
+    if (headPosition1 == apple.getPosition()) {
         snake.eatApple();
         apple.respawn({});
         appleRespawnTimer.restart();
         createSprites();
     }
     else {
-        // Удаляем последний сегмент змейки
         snake.move();
     }
+
+    if(botIsOn)
+    {
+        sf::RectangleShape newHead2 = bot.getBody().front();
+        newHead2.move(bot.getDirection());
+
+        sf::Vector2f headPosition2 = newHead2.getPosition();
+
+        if (headPosition2 == apple.getPosition()) {
+            bot.eatApple();
+            apple.respawn({});
+            appleRespawnTimer.restart();
+            createSprites();
+        }
+        else {
+            bot.move();
+        }
+    }
+
+    
 
     // Проверка времени с момента последнего респауна яблока
     if (appleRespawnTimer.getElapsedTime().asSeconds() >= 5) {
@@ -366,7 +424,7 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
 }
 
 void singleplayer::initTextures() {
-    if (!snakeTexture.loadFromFile("../designe/snake2.png")) {
+    if (!snakeTexture.loadFromFile("../designe/snake1.png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
     }
 
@@ -376,6 +434,10 @@ void singleplayer::initTextures() {
 
     if (!wallTexture.loadFromFile("../designe/wall.png")) {
         std::cerr << "Failed to load wall texture." << std::endl;
+    }
+
+    if (!botTexture.loadFromFile("../designe/snake2.png")) {
+        std::cerr << "Failed to load bots texture." << std::endl;
     }
 }
 
@@ -387,10 +449,17 @@ void singleplayer::createSprites() {
         sf::Sprite segmentSprite(snakeTexture);
         segmentSprite.setScale(CELL_SIZE / snakeTexture.getSize().x, CELL_SIZE / snakeTexture.getSize().y);
         segmentSprite.setPosition(segment.getPosition());
-        //segmentSprite.setRotation(rotation);  // Устанавливаем угол поворота
         bodySprites.push_back(segmentSprite);
     }
-
+    if(botIsOn)
+    {
+        for (const auto& segment : bot.getBody()) {
+            sf::Sprite segmentSprite(botTexture);
+            segmentSprite.setScale(CELL_SIZE / botTexture.getSize().x, CELL_SIZE / botTexture.getSize().y);
+            segmentSprite.setPosition(segment.getPosition());
+            bodySprites.push_back(segmentSprite);
+        }
+    }
     for (const auto& wall : walls) {
         sf::Sprite wallSprite(wallTexture);
         wallSprite.setScale(CELL_SIZE / wallTexture.getSize().x, CELL_SIZE / wallTexture.getSize().y);

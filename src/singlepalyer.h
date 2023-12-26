@@ -8,7 +8,7 @@
 
 class singleplayer {
 public:
-    singleplayer(Snake _snake);
+    singleplayer(Snake _snake, bool _botIsOn = false);
 
     int startSingleplayer(sf::RenderWindow& window);
 
@@ -63,6 +63,8 @@ protected:
 
 private:
     Snake snake;
+    Snake bot;
+    bool botIsOn;
     Apple apple;  // Добавляем объект Apple
 
     sf::Font font;         // Добавленный объект шрифта
@@ -79,4 +81,5 @@ private:
     sf::Texture wallTexture;
     sf::Sprite appleSprite;
     std::deque<sf::Sprite> bodySprites;
+    sf::Texture botTexture;
 };

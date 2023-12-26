@@ -27,6 +27,8 @@ public:
     sf::Vector2f getDirection();
 
     bool checkCollisionWithBody(const sf::Vector2f& position) const;
+    void changeBotDirection(const sf::Vector2f& applePosition, const std::vector<Wall>& walls);
+    bool checkCollisionWithWalls(const sf::Vector2f& position, const std::vector<Wall>& walls) const;
 
 private:
     std::deque<sf::RectangleShape> body;

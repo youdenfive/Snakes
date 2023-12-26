@@ -141,3 +141,93 @@ bool Snake::checkCollisionWithBody(const sf::Vector2f& position) const {
     }
     return false;
 }
+//void Snake::changeBotDirection(const sf::Vector2f& applePosition) {
+//    sf::Vector2f targetDirection = applePosition - getHeadPosition();
+//    sf::Vector2f newDirection;
+//
+//    // ѕровер€ем, находитс€ ли €блоко внутри змейки
+//    if (checkCollisionWithBody(applePosition)) {
+//        // ≈сли €блоко находитс€ внутри змейки, просто оставл€ем текущее направление
+//        return;
+//    }
+//
+//    // ¬ыбираем направление на основе положени€ €блока
+//    if (std::abs(targetDirection.x) > std::abs(targetDirection.y)) {
+//        newDirection = sf::Vector2f((targetDirection.x > 0) ? SPEED : -SPEED, 0);
+//    }
+//    else {
+//        newDirection = sf::Vector2f(0, (targetDirection.y > 0) ? SPEED : -SPEED);
+//    }
+//
+//    // ѕровер€ем, не приведет ли новое направление к столкновению с телом змейки
+//    if (!checkCollisionWithBody(getHeadPosition() + newDirection)) {
+//        direction = newDirection;
+//    }
+//    else {
+//        // ≈сли новое направление приводит к столкновению, попробуем повернуть в направлении €блока
+//        if (std::abs(targetDirection.x) > std::abs(targetDirection.y)) {
+//            newDirection = sf::Vector2f(0, (targetDirection.y > 0) ? SPEED : -SPEED);
+//        }
+//        else {
+//            newDirection = sf::Vector2f((targetDirection.x > 0) ? SPEED : -SPEED, 0);
+//        }
+//
+//        // ѕровер€ем, не приведет ли новое направление к столкновению с телом змейки
+//        if (!checkCollisionWithBody(getHeadPosition() + newDirection)) {
+//            direction = newDirection;
+//        }
+//        // ≈сли и это направление приводит к столкновению, оставл€ем текущее направление
+//    }
+//}
+void Snake::changeBotDirection(const sf::Vector2f& applePosition, const std::vector<Wall>& walls) {
+    sf::Vector2f targetDirection = applePosition - getHeadPosition();
+    sf::Vector2f newDirection;
+
+    // ѕровер€ем, находитс€ ли €блоко внутри змейки
+    if (checkCollisionWithBody(applePosition)) {
+        // ≈сли €блоко находитс€ внутри змейки, просто оставл€ем текущее направление
+        return;
+    }
+
+    // ¬ыбираем направление на основе положени€ €блока
+    if (std::abs(targetDirection.x) > std::abs(targetDirection.y)) {
+        newDirection = sf::Vector2f((targetDirection.x > 0) ? SPEED : -SPEED, 0);
+    }
+    else {
+        newDirection = sf::Vector2f(0, (targetDirection.y > 0) ? SPEED : -SPEED);
+    }
+
+    // ѕровер€ем, не приведет ли новое направление к столкновению с телом змейки
+    // и стенами на карте
+    if (!checkCollisionWithBody(getHeadPosition() + newDirection) && !checkCollisionWithWalls(getHeadPosition() + newDirection, walls)) {
+        direction = newDirection;
+    }
+    else {
+        // ≈сли новое направление приводит к столкновению, попробуем повернуть в направлении €блока
+        if (std::abs(targetDirection.x) > std::abs(targetDirection.y)) {
+            newDirection = sf::Vector2f(0, (targetDirection.y > 0) ? SPEED : -SPEED);
+        }
+        else {
+            newDirection = sf::Vector2f((targetDirection.x > 0) ? SPEED : -SPEED, 0);
+        }
+
+        // ѕровер€ем, не приведет ли новое направление к столкновению с телом змейки
+        // и стенами на карте
+        if (!checkCollisionWithBody(getHeadPosition() + newDirection) && !checkCollisionWithWalls(getHeadPosition() + newDirection, walls)) {
+            direction = newDirection;
+        }
+        // ≈сли и это направление приводит к столкновению, оставл€ем текущее направление
+    }
+}
+
+bool Snake::checkCollisionWithWalls(const sf::Vector2f& position, const std::vector<Wall>& walls) const {
+    for (const auto& wall : walls) {
+        if (wall.getPosition().x == position.x && wall.getPosition().y == position.y)
+            return true;
+    }
+    return false;  // Ќет столкновени€ со стеной
+}
+
+
+
+
