@@ -40,7 +40,7 @@ std::vector<std::pair<std::string, std::string>> setDefaultSettings()
 	settings.push_back(std::pair("Down", "S"));
 	settings.push_back(std::pair("Right", "D"));
 	settings.push_back(std::pair("Rounds", "1"));
-	settings.push_back(std::pair("Bots", "0"));
+	settings.push_back(std::pair("Bot", "OFF"));
 	settings.push_back(std::pair("Nickname1", "Player1"));
 	settings.push_back(std::pair("Nickname2", "Player2"));
 	settings.push_back(std::pair("CellSize", "1"));

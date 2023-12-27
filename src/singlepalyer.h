@@ -8,7 +8,7 @@
 
 class singleplayer {
 public:
-    singleplayer(Snake _snake, bool _botIsOn = false);
+    singleplayer(Snake _snake);
 
     int startSingleplayer(sf::RenderWindow& window);
 
@@ -60,6 +60,7 @@ protected:
     void createSprites();
     Snake getSnake();
     void deleteWalls();
+    void drawField(sf::RenderWindow& window);
 
 private:
     Snake snake;
@@ -76,6 +77,7 @@ private:
     void initFont();
     std::vector<Wall> walls;
     sf::Clock appleRespawnTimer;
+    sf::Texture fieldTexture;
     sf::Texture snakeTexture;
     sf::Texture appleTexture;
     sf::Texture wallTexture;

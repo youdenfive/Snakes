@@ -7,19 +7,29 @@
 twoPlayaGame::twoPlayaGame(std::string _playa1name, std::string _playa2name) : player1(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up", "W"}, {"Left", "A"}, {"Down", "S"}, {"Right", "D"} }),
 player2(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up", "Up"}, {"Left", "Left"}, {"Down", "Down"}, {"Right", "Right"} }), playa1name(_playa1name), playa2name(_playa2name)
 {     
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     collision = "";
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
 
     // Инициализация прямоугольника границ
-    border.setSize(sf::Vector2f(width - 2 * CELL_SIZE, height - 2 * CELL_SIZE));
-    border.setFillColor(sf::Color::Transparent); // Прозрачный цвет
-    border.setOutlineColor(sf::Color::Yellow);   // Цвет границ
-    border.setOutlineThickness(CELL_SIZE);       // Толщина границ
+    border.setSize(sf::Vector2f(width - 2 * stoi(settings[8].second) * CELL_SIZE, height - 2 * stoi(settings[8].second) * CELL_SIZE));
+    border.setFillColor(sf::Color::Transparent);  // Прозрачный цвет
+    border.setOutlineColor(sf::Color::Yellow);      // Цвет границ
+    border.setOutlineThickness(stoi(settings[8].second) * CELL_SIZE);              // Толщина границ
 
     // Установка позиции прямоугольника границ, чтобы он оставался внутри экрана
-    border.setPosition(CELL_SIZE, CELL_SIZE);
+    border.setPosition(stoi(settings[8].second) * CELL_SIZE, stoi(settings[8].second) * CELL_SIZE);
+
 
     // Загружаем шрифт
     if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
@@ -76,7 +86,7 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
         round.setFont(font);
         round.setCharacterSize(30);
         round.setFillColor(sf::Color::White);
-        round.setPosition(1560, 10 + CELL_SIZE);
+        round.setPosition(1560, 10 + stoi(settings[8].second) * CELL_SIZE);
         round.setString("Round: " + std::to_string(roundNumber) + '/' + std::to_string(roundsCount));
 
         player1.setDefaultSnake(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
@@ -223,8 +233,8 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
 
             // Отрисовка
             window.clear();
-            window.draw(round);
             draw(window, sf::Vector2i(score1, score2));
+            window.draw(round);
             window.display();
         }
     }
@@ -248,21 +258,30 @@ void twoPlayaGame::updateSpeed() {
 bool twoPlayaGame::checkCollision() {
     bool result = false;
 
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
 
     // Проверка на столкновение с границами
     sf::Vector2f headPosition1 = player1.getHeadPosition();
-    if (headPosition1.x < CELL_SIZE || headPosition1.x >= width - CELL_SIZE ||
-        headPosition1.y < CELL_SIZE || headPosition1.y >= height - CELL_SIZE) {
+    if (headPosition1.x < stoi(settings[8].second) * CELL_SIZE || headPosition1.x >= width - stoi(settings[8].second) * CELL_SIZE ||
+        headPosition1.y < stoi(settings[8].second) * CELL_SIZE || headPosition1.y >= height - stoi(settings[8].second) * CELL_SIZE) {
         collision = playa2name;
         result = true;
     }
     // Проверка на столкновение с границами
     sf::Vector2f headPosition2 = player2.getHeadPosition();
-    if (headPosition2.x < CELL_SIZE || headPosition2.x >= width - CELL_SIZE ||
-        headPosition2.y < CELL_SIZE || headPosition2.y >= height - CELL_SIZE) {
+    if (headPosition2.x < stoi(settings[8].second) * CELL_SIZE || headPosition2.x >= width - stoi(settings[8].second) * CELL_SIZE ||
+        headPosition2.y < stoi(settings[8].second) * CELL_SIZE || headPosition2.y >= height - stoi(settings[8].second) * CELL_SIZE) {
         collision = (!result) ? playa1name : "Nobody";
         result = true;
     }
@@ -366,14 +385,23 @@ void twoPlayaGame::draw(sf::RenderWindow& window, sf::Vector2i playersScore) {
     // Отрисовка стен и яблока
     drawSprites(window);
 
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     // Отображение количества клеток змейки
     lengthText.setString(playa1name + ":" + std::to_string(playersScore.x + getPlayer1().getBody().size() - 3));
-    lengthText.setPosition(10 + CELL_SIZE, 10 + CELL_SIZE);  // Позиция текста
+    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 
     // Отображение количества клеток змейки
     lengthText.setString(playa2name + ":" + std::to_string(playersScore.y + getPlayer2().getBody().size() - 3));
-    lengthText.setPosition(10 + CELL_SIZE, 10 + 2*CELL_SIZE);  // Позиция текста
+    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 
     // Отрисовка заднего фона (границ)
@@ -383,6 +411,9 @@ void twoPlayaGame::draw(sf::RenderWindow& window, sf::Vector2i playersScore) {
 
 void twoPlayaGame::drawSprites(sf::RenderWindow& window) {
     // Отрисовка каждого сегмента змейки с учетом поворота
+
+    drawField(window);
+
     for (const auto& sprite : bodySprites) {
         window.draw(sprite);
     }
@@ -392,18 +423,33 @@ void twoPlayaGame::drawSprites(sf::RenderWindow& window) {
 }
 
 void twoPlayaGame::initTextures() {
-    srand(time(NULL));
-    int num1 = 1 + rand() % 9;
-    if (!snakeTexture.loadFromFile("../designe/snake" + std::to_string(num1) + ".png")) {
-        std::cerr << "Failed to load snake1 texture." << std::endl;
+
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
+    if (!fieldTexture.loadFromFile("../designe/field.png")) {
+        std::cerr << "Failed to load field texture." << std::endl;
+    }
+
+    if (!snake1Texture.loadFromFile("../designe/snake" + settings[9].second + ".png")) {
+        std::cerr << "Failed to load snake texture." << std::endl;
+    }
+
+    if (!snake2Texture.loadFromFile("../designe/snake" + settings[10].second + ".png")) {
+        std::cerr << "Failed to load snake texture." << std::endl;
+    }
+
+    if (!appleTexture.loadFromFile("../designe/apple" + settings[11].second + ".png")) {
+        std::cerr << "Failed to load apple texture." << std::endl;
     }
     
     appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
-    
-    int num2 = (num1 + 1) % 10;
-    if (!wallTexture.loadFromFile("../designe/snake" + std::to_string(num2) + ".png")) {
-        std::cerr << "Failed to load snake2 texture." << std::endl;
-    }
 }
 
 void twoPlayaGame::createSprites() {
@@ -412,15 +458,15 @@ void twoPlayaGame::createSprites() {
     appleSprite.setScale(CELL_SIZE / appleTexture.getSize().x, CELL_SIZE / appleTexture.getSize().y);
     appleSprite.setPosition(apple.getPosition());
     for (const auto& segment : player1.getBody()) {
-        sf::Sprite segmentSprite(snakeTexture);
-        segmentSprite.setScale(CELL_SIZE / snakeTexture.getSize().x, CELL_SIZE / snakeTexture.getSize().y);
+        sf::Sprite segmentSprite(snake1Texture);
+        segmentSprite.setScale(CELL_SIZE / snake1Texture.getSize().x, CELL_SIZE / snake1Texture.getSize().y);
         segmentSprite.setPosition(segment.getPosition());
         bodySprites.push_back(segmentSprite);
     }
 
     for (const auto& segment : player2.getBody()) {
-        sf::Sprite segmentSprite(wallTexture);
-        segmentSprite.setScale(CELL_SIZE / snakeTexture.getSize().x, CELL_SIZE / snakeTexture.getSize().y);
+        sf::Sprite segmentSprite(snake2Texture);
+        segmentSprite.setScale(CELL_SIZE / snake2Texture.getSize().x, CELL_SIZE / snake2Texture.getSize().y);
         segmentSprite.setPosition(segment.getPosition());
         bodySprites.push_back(segmentSprite);
     }
@@ -440,5 +486,24 @@ int twoPlayaGame::score() {
     }
     else if (collision == "Nobody") {
         return 0;
+    }
+}
+
+void twoPlayaGame::drawField(sf::RenderWindow& window)
+{
+    int width = sf::VideoMode::getDesktopMode().width;
+    int height = sf::VideoMode::getDesktopMode().height;
+
+    for (int i = 0; (i * CELL_SIZE) < width; ++i) {
+        for (int j = 0; (j * CELL_SIZE) < height; ++j) {
+            sf::Sprite cellSprite;
+
+            cellSprite.setTexture(fieldTexture);
+
+            cellSprite.setScale(1, 1);
+            cellSprite.setPosition(sf::Vector2f(i * CELL_SIZE, j * CELL_SIZE));
+
+            window.draw(cellSprite);
+        }
     }
 }

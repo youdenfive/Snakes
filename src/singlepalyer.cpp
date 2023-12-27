@@ -2,7 +2,7 @@
 #include "singlepalyer.h"
 #include <string>
 
-singleplayer::singleplayer(Snake _snake, bool _botIsOn) : snake(_snake), bot(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), {}), botIsOn(_botIsOn)
+singleplayer::singleplayer(Snake _snake) : snake(_snake)
 {     
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -53,13 +53,20 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         settings = setDefaultSettings();
     }
 
+    if (settings[5].second == "ON") {
+        botIsOn = true;
+    }
+    else {
+        botIsOn = false;
+    }
+
     int score = 0;
 
     sf::Text nickname;
     nickname.setFont(font);
     nickname.setCharacterSize(30);
     nickname.setFillColor(sf::Color::White);
-    nickname.setPosition(860, 10 + CELL_SIZE);
+    nickname.setPosition(860, 10 + stoi(settings[8].second) * CELL_SIZE);
     nickname.setString(settings[6].second);
 
     // Инициализация генератора случайных чисел
@@ -72,7 +79,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         round.setFont(font);
         round.setCharacterSize(30);
         round.setFillColor(sf::Color::White);
-        round.setPosition(1560, 10 + CELL_SIZE);
+        round.setPosition(1560, 10 + stoi(settings[8].second) * CELL_SIZE);
         round.setString("Round: " + std::to_string(roundNumber) + '/' + std::to_string(roundsCount));
 
         deleteWalls();
@@ -134,8 +141,6 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
                                     break;
 
                                 case 2:
-                                    //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                                    //menu.pressButton(name, 0);
                                     return 0;
                                 }
                             }
@@ -245,9 +250,10 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
             // Отрисовка
             window.clear();
+            draw(window, score);
             window.draw(nickname);
             window.draw(round);
-            draw(window, score);
+
             window.display();
         }
     }
@@ -273,17 +279,26 @@ bool singleplayer::checkCollision() {
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
 
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     // Проверка на столкновение с границами
     sf::Vector2f headPosition1 = snake.getHeadPosition();
-    if (headPosition1.x < CELL_SIZE || headPosition1.x >= width - CELL_SIZE ||
-        headPosition1.y < CELL_SIZE || headPosition1.y >= height - CELL_SIZE) {
+    if (headPosition1.x < stoi(settings[8].second) * CELL_SIZE || headPosition1.x >= width - stoi(settings[8].second) * CELL_SIZE ||
+        headPosition1.y < stoi(settings[8].second) * CELL_SIZE || headPosition1.y >= height - stoi(settings[8].second) * CELL_SIZE) {
         return true;
     }
     if (botIsOn) {
         // Проверка на столкновение с границами
         sf::Vector2f headPosition2 = bot.getHeadPosition();
-        if (headPosition2.x < CELL_SIZE || headPosition2.x >= width - CELL_SIZE ||
-            headPosition2.y < CELL_SIZE || headPosition2.y >= height - CELL_SIZE) {
+        if (headPosition2.x < stoi(settings[8].second) * CELL_SIZE || headPosition2.x >= width - stoi(settings[8].second) * CELL_SIZE ||
+            headPosition2.y < stoi(settings[8].second) * CELL_SIZE || headPosition2.y >= height - stoi(settings[8].second) * CELL_SIZE) {
             return true;
         }
 
@@ -326,10 +341,20 @@ bool singleplayer::checkCollision() {
 }
 
 void singleplayer::map() {
+
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     for (int j = 0; j < 5; j++) {
         for (int i = 0; i < 5; i++)
-            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2) + 1) * CELL_SIZE,
-                static_cast<int>(rand() % (HEIGHT - 2) + 1) * CELL_SIZE));
+            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE,
+                static_cast<int>(rand() % (HEIGHT - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE));
     }
 }
 
@@ -398,9 +423,18 @@ void singleplayer::draw(sf::RenderWindow& window, int& score) {
     // Отрисовка стен и яблока
     drawSprites(window);
 
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
     // Отображение количества клеток змейки
     lengthText.setString("Score: " + std::to_string(score + this->getSnake().getBody().size() - 3));
-    lengthText.setPosition(10 + CELL_SIZE, 10 + CELL_SIZE);  // Позиция текста
+    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 
     // Отрисовка заднего фона (границ)
@@ -409,6 +443,9 @@ void singleplayer::draw(sf::RenderWindow& window, int& score) {
 
 
 void singleplayer::drawSprites(sf::RenderWindow& window) {
+
+    drawField(window);
+
     // Отрисовка стен
     for (const auto& wall : walls) {
         window.draw(wall.getSprite());
@@ -424,11 +461,25 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
 }
 
 void singleplayer::initTextures() {
-    if (!snakeTexture.loadFromFile("../designe/snake1.png")) {
+
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        settings = setDefaultSettings();
+    }
+
+    if (!fieldTexture.loadFromFile("../designe/field.png")) {
+        std::cerr << "Failed to load field texture." << std::endl;
+    }
+
+    if (!snakeTexture.loadFromFile("../designe/snake" + settings[9].second + ".png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
     }
 
-    if (!appleTexture.loadFromFile("../designe/apple1.png")) {
+    if (!appleTexture.loadFromFile("../designe/apple" + settings[11].second + ".png")) {
         std::cerr << "Failed to load apple texture." << std::endl;
     }
 
@@ -436,7 +487,7 @@ void singleplayer::initTextures() {
         std::cerr << "Failed to load wall texture." << std::endl;
     }
 
-    if (!botTexture.loadFromFile("../designe/snake2.png")) {
+    if (!botTexture.loadFromFile("../designe/bot" + settings[12].second + ".png")) {
         std::cerr << "Failed to load bots texture." << std::endl;
     }
 }
@@ -455,6 +506,7 @@ void singleplayer::createSprites() {
     {
         for (const auto& segment : bot.getBody()) {
             sf::Sprite segmentSprite(botTexture);
+
             segmentSprite.setScale(CELL_SIZE / botTexture.getSize().x, CELL_SIZE / botTexture.getSize().y);
             segmentSprite.setPosition(segment.getPosition());
             bodySprites.push_back(segmentSprite);
@@ -490,4 +542,23 @@ Snake singleplayer::getSnake()
 void singleplayer::deleteWalls()
 {
     walls.clear();
+}
+
+void singleplayer::drawField(sf::RenderWindow& window)
+{
+    int width = sf::VideoMode::getDesktopMode().width;
+    int height = sf::VideoMode::getDesktopMode().height;
+
+    for (int i = 0; (i * CELL_SIZE) < width; ++i) {
+        for (int j = 0; (j * CELL_SIZE) < height; ++j) {
+            sf::Sprite cellSprite;
+
+            cellSprite.setTexture(fieldTexture);
+
+            cellSprite.setScale(1, 1);
+            cellSprite.setPosition(sf::Vector2f(i * CELL_SIZE, j * CELL_SIZE));
+
+            window.draw(cellSprite);
+        }
+    }
 }

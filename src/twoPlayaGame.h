@@ -63,6 +63,7 @@ protected:
     void drawSprites(sf::RenderWindow& window);
     void createSprites();
     void appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
+    void drawField(sf::RenderWindow& window);
 
 private:
     Apple apple;  // Добавляем объект Apple
@@ -76,9 +77,10 @@ private:
     void initFont();
     std::vector<Wall> walls;
     sf::Clock appleRespawnTimer;
-    sf::Texture snakeTexture;
+    sf::Texture fieldTexture;
+    sf::Texture snake1Texture;
     sf::Texture appleTexture;
-    sf::Texture wallTexture;
+    sf::Texture snake2Texture;
     sf::Sprite appleSprite;
     std::deque<sf::Sprite> bodySprites;
 
