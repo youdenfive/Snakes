@@ -26,6 +26,7 @@ void InitText(sf::Text& mtext, float xpos, float ypos, sf::String str, int size_
 void setControl(sf::Text& key, sf::String keyName, float ypos);
 
 int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game);
+int gameMultyplayerStart(sf::RenderWindow& window, twoPlayaGame& game);
 
 int main()
 {
@@ -40,7 +41,8 @@ int main()
 		settings = getSettings();
 	}
 	catch (...) {
-		settings = setDefaultSettings();
+		setDefaultSettings();
+		settings = getSettings();
 	}
 
 	// Делаем курсор невидимым.
@@ -92,11 +94,16 @@ int main()
 
 	// Инициализирует текст вложенных меню
 	std::vector<sf::String> startGameName = { "SINGLEPLAYER", "MULTIPLAYER", "GO BACK" };
-	std::vector<sf::String> settingsGameName = { "NICKNAME", "CONTROL", "THEME", "FIELD SIZE", "GO BACK" };
+	std::vector<sf::String> settingsGameName = { "NICKNAME", "CONTROL", "THEME", "FIELD SIZE", "SET DEFAULT SETTINGS", "GO BACK" };
 	std::vector<sf::String> aboutGameName = { "GO BACK" };
 
 	// Инициализирует меню управления.
-	std::vector<sf::String> controlName = { "UP", "LEFT", "DOWN", "RIGHT", "APPLY", "GO BACK" };
+	std::vector<sf::String> playerControlName = { "UP", "LEFT", "DOWN", "RIGHT", "SAVE", "GO BACK" };
+	gameMenu playerControlMenu(window, 950, 350, playerControlName, 100, 70);
+	playerControlMenu.alignTextMenu(2);
+
+	// Инициализирует меню управления.
+	std::vector<sf::String> controlName = { "PLAYER1", "PLAYER2", "GO BACK" };
 	gameMenu controlMenu(window, 950, 350, controlName, 100, 70);
 	controlMenu.alignTextMenu(2);
 
@@ -229,7 +236,7 @@ int main()
 						gameMenu_.pressButton(startGameName, 1);
 						break;
 					case 1:
-						gameMenu_.setPositionY(350);
+						gameMenu_.setPositionY(250);
 						gameMenu_.pressButton(settingsGameName, 2);
 						break;
 					case 2:
@@ -428,7 +435,8 @@ int main()
 
 											setSettings(settings);
 
-											multyGame.startTwoPlayaGame(window);
+											gameMultyplayerStart(window, multyGame);
+											//multyGame.startTwoPlayaGame(window);
 										}
 
 
@@ -597,14 +605,7 @@ int main()
 
 						bool control = true;
 
-						// Обрабатывает нажатие кнопки.
-						sf::String keyU = settings[0].second;
-						sf::String keyL = settings[1].second;
-						sf::String keyD = settings[2].second;
-						sf::String keyR = settings[3].second;
 						while (control) {
-
-							sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
 
 							while (window.pollEvent(event))
 							{
@@ -628,93 +629,283 @@ int main()
 									switch (controlMenu.getSelected()) {
 
 
-									case 0:
-										if (event.type == sf::Event::KeyReleased) {
-											code = event.key.scancode;
-											if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
-												keyU = sf::Keyboard::getDescription(code);
+									case 0: {
+
+										if (event.key.code != sf::Keyboard::Enter) {
+											break;
+										}
+
+										bool player1 = true;
+
+										// Обрабатывает нажатие кнопки.
+										sf::String keyU = settings[0].second;
+										sf::String keyL = settings[1].second;
+										sf::String keyD = settings[2].second;
+										sf::String keyR = settings[3].second;
+
+										while (player1) {
+
+											sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+
+											while (window.pollEvent(event))
+											{
+												// Закрывает окно.
+												if (event.type == sf::Event::Closed)
+													window.close();
+
+												// Обрабатывает нажатие кнопки.
+												if (event.type == sf::Event::KeyReleased) {
+
+													// Выбор нижестоящей кнопки.
+													if (event.key.code == sf::Keyboard::Up) {
+														playerControlMenu.moveUp();
+													}
+
+													// Выбор нижестоящей кнопки.
+													if (event.key.code == sf::Keyboard::Down) {
+														playerControlMenu.moveDown();
+													}
+
+													switch (playerControlMenu.getSelected()) {
+
+
+													case 0:
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyU = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+													case 1:
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyL = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+													case 2:
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyD = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+													case 3:
+
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyR = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+
+													case 4:
+														if (event.key.code == sf::Keyboard::Enter) {
+
+															std::string Up = keyUp.getString();
+															std::string Left = keyLeft.getString();
+															std::string Down = keyDown.getString();
+															std::string Right = keyRight.getString();
+
+															//std::vector<std::pair<std::string, std::string>> controlSettings;
+
+															settings[0].second = Up;
+															settings[1].second = Left;
+															settings[2].second = Down;
+															settings[3].second = Right;
+
+															setSettings(settings);
+														}
+														break;
+													case 5:
+														if (event.key.code == sf::Keyboard::Enter) {
+															player1 = false;
+														}
+														break;
+													}
+												}
+
 											}
+
+											keyLeft.setFont(font);
+											setControl(keyLeft, keyL, 460);
+											keyUp.setFont(font);
+											setControl(keyUp, keyU, 360);
+											keyDown.setFont(font);
+											setControl(keyDown, keyD, 560);
+											keyRight.setFont(font);
+											setControl(keyRight, keyR, 660);
+
+											window.clear();
+											window.draw(background);
+											window.draw(titul);
+											playerControlMenu.draw();
+											window.draw(keyUp);
+											window.draw(keyLeft);
+											window.draw(keyDown);
+											window.draw(keyRight);
+											window.display();
+										}
+										break;
+									}
+									case 1: {
+
+										if (event.key.code != sf::Keyboard::Enter) {
+											break;
 										}
 
-										break;
-									case 1:
-										if (event.type == sf::Event::KeyReleased) {
-											code = event.key.scancode;
-											if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
-												keyL = sf::Keyboard::getDescription(code);
+										bool player2 = true;
+
+										// Обрабатывает нажатие кнопки.
+										sf::String keyU = settings[13].second;
+										sf::String keyL = settings[14].second;
+										sf::String keyD = settings[15].second;
+										sf::String keyR = settings[16].second;
+										while (player2) {
+
+											sf::Keyboard::Scancode code = sf::Keyboard::Scancode::Unknown;
+											bool inLoop = false; // Переменная для отслеживания нахождения программы в цикле
+
+											while (window.pollEvent(event))
+											{
+												// Закрывает окно.
+												if (event.type == sf::Event::Closed)
+													window.close();
+
+												// Обрабатывает нажатие кнопки.
+												if (event.type == sf::Event::KeyReleased) {
+
+													// Выбор нижестоящей кнопки.
+													if (event.key.code == sf::Keyboard::Up) {
+														playerControlMenu.moveUp();
+													}
+
+													// Выбор нижестоящей кнопки.
+													if (event.key.code == sf::Keyboard::Down) {
+														playerControlMenu.moveDown();
+													}
+
+													bool notPressed = true;
+
+													switch (playerControlMenu.getSelected()) {
+
+
+													case 0:
+															
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyU = sf::Keyboard::getDescription(code);
+															}
+														}
+														break;
+													case 1:
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyL = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+													case 2:
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyD = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+													case 3:
+
+														if (event.type == sf::Event::KeyReleased) {
+															code = event.key.scancode;
+															if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
+																keyR = sf::Keyboard::getDescription(code);
+															}
+														}
+
+														break;
+
+													case 4:
+														if (event.key.code == sf::Keyboard::Enter) {
+
+															std::string Up = keyUp.getString();
+															std::string Left = keyLeft.getString();
+															std::string Down = keyDown.getString();
+															std::string Right = keyRight.getString();
+
+															//std::vector<std::pair<std::string, std::string>> controlSettings;
+
+															settings[13].second = Up;
+															settings[14].second = Left;
+															settings[15].second = Down;
+															settings[16].second = Right;
+
+															setSettings(settings);
+														}
+														break;
+													case 5:
+														if (event.key.code == sf::Keyboard::Enter) {
+															player2 = false;
+														}
+														break;
+													}
+												}
+
 											}
-										}
 
-										break;
-									case 2:
-										if (event.type == sf::Event::KeyReleased) {
-											code = event.key.scancode;
-											if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
-												keyD = sf::Keyboard::getDescription(code);
-											}
-										}
+											keyLeft.setFont(font);
+											setControl(keyLeft, keyL, 460);
+											keyUp.setFont(font);
+											setControl(keyUp, keyU, 360);
+											keyDown.setFont(font);
+											setControl(keyDown, keyD, 560);
+											keyRight.setFont(font);
+											setControl(keyRight, keyR, 660);
 
-										break;
-									case 3:
-
-										if (event.type == sf::Event::KeyReleased) {
-											code = event.key.scancode;
-											if (sf::Keyboard::getDescription(code) != "Up" && sf::Keyboard::getDescription(code) != "Down") {
-												keyR = sf::Keyboard::getDescription(code);
-											}
-										}
-
-										break;
-
-									case 4:
-										if (event.key.code == sf::Keyboard::Enter) {
-
-											std::string Up = keyUp.getString();
-											std::string Left = keyLeft.getString();
-											std::string Down = keyDown.getString();
-											std::string Right = keyRight.getString();
-
-											//std::vector<std::pair<std::string, std::string>> controlSettings;
-
-											settings[0].second = Up;
-											settings[1].second = Left;
-											settings[2].second = Down;
-											settings[3].second = Right;
-
-											setSettings(settings);
+											window.clear();
+											window.draw(background);
+											window.draw(titul);
+											playerControlMenu.draw();
+											window.draw(keyUp);
+											window.draw(keyLeft);
+											window.draw(keyDown);
+											window.draw(keyRight);
+											window.display();
 										}
 										break;
-									case 5:
+									}
+									case 2: {
 										if (event.key.code == sf::Keyboard::Enter) {
 											control = false;
 										}
 										break;
 									}
+
+									}
+
 								}
-
 							}
-
-							keyLeft.setFont(font);
-							setControl(keyLeft, keyL, 460);
-							keyUp.setFont(font);
-							setControl(keyUp, keyU, 360);
-							keyDown.setFont(font);
-							setControl(keyDown, keyD, 560);
-							keyRight.setFont(font);
-							setControl(keyRight, keyR, 660);
 
 							window.clear();
 							window.draw(background);
 							window.draw(titul);
 							controlMenu.draw();
-							window.draw(keyUp);
-							window.draw(keyLeft);
-							window.draw(keyDown);
-							window.draw(keyRight);
 							window.display();
 						}
 						break;
 					}
+
 					case 2: {
 
 						if (event.key.code != sf::Keyboard::Enter) {
@@ -1007,7 +1198,19 @@ int main()
 
 						break;
 					}
+
 					case 4: {
+
+						if (event.key.code != sf::Keyboard::Enter) {
+							break;
+						}
+
+						setDefaultSettings();
+						settings = getSettings();
+						break;
+					}
+
+					case 5: {
 
 						if (event.key.code != sf::Keyboard::Enter) {
 							break;
@@ -1105,6 +1308,18 @@ int gameSingleplayerStart(sf::RenderWindow& window, singleplayer game)
 	case 2 :
 			gameSingleplayerStart(window, game);
 	case 0 :
+		return 1;
+	}
+	return 1;
+}
+
+int gameMultyplayerStart(sf::RenderWindow& window, twoPlayaGame& game)
+{
+	int result = game.startTwoPlayaGame(window);
+	switch (result) {
+	case 2:
+		gameMultyplayerStart(window, game);
+	case 0:
 		return 1;
 	}
 	return 1;

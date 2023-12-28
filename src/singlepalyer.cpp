@@ -10,7 +10,8 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     // Размеры окна
@@ -37,6 +38,8 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
     lengthText.setFillColor(sf::Color::White);
 
     initFont();  // Вызываем метод для инициализации шрифта
+    collision = "";
+    _score = 0;
 };
 
 int singleplayer::startSingleplayer(sf::RenderWindow& window)
@@ -50,7 +53,8 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     if (settings[5].second == "ON") {
@@ -61,6 +65,7 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
     }
 
     int score = 0;
+    int botScore = 0;
 
     sf::Text nickname;
     nickname.setFont(font);
@@ -69,12 +74,21 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
     nickname.setPosition(860, 10 + stoi(settings[8].second) * CELL_SIZE);
     nickname.setString(settings[6].second);
 
+    // Инициализирует текст вложенных меню
+    std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
+    gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
+    gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
+    gameOverMenu.alignTextMenu(1);
+
+
+    sf::Event event;
+
     // Инициализация генератора случайных чисел
     srand(static_cast<unsigned>(time(nullptr)));
     int roundsCount = stoi(settings[4].second);
 
     for (int roundNumber = 1; roundNumber <= roundsCount; ++roundNumber) {
-
+        collision = "";
         sf::Text round;
         round.setFont(font);
         round.setCharacterSize(30);
@@ -173,91 +187,110 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
             updateSpeed(); // Вызываем для начальной установки интервала обновления
 
-            // Инициализирует текст вложенных меню
-            std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
-            gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
-            gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
-            gameOverMenu.alignTextMenu(1);
 
-            if (checkCollision() && roundNumber < roundsCount) {
+            if (checkCollision()) {
                 score = score + getSnake().getBody().size() - 3;
+                botScore = botScore + bot.getLength() - 3;
+                if (collision == "playa" && botIsOn) {
+                    score += 5;
+                }
+                else if (collision == "bot" && botIsOn) {
+                    botScore += 5;
+                }
+                else if (collision == "playa kill" && botIsOn) {
+                    score += 5;
+                }
+                else if (collision == "bot kill" && botIsOn) {
+                    botScore += 5;
+                }
                 break;
             }
 
-
-            // Проверка на столкновение
-            while (checkCollision()) {
-
-                std::cout << "Game Over!" << std::endl;
-
-                window.clear();
-
-                // Отображение "Game Over" и длины змейки
-                sf::Text gameOverText;
-                gameOverText.setFont(getFont());
-                gameOverText.setCharacterSize(40);
-                gameOverText.setFillColor(sf::Color::Red);
-                gameOverText.setString("Game Over!");
-                gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
-
-                sf::Text lengthText;
-                lengthText.setFont(getFont());
-                lengthText.setCharacterSize(20);
-                lengthText.setFillColor(sf::Color::White);
-                lengthText.setString("Score: " + std::to_string(score + getSnake().getBody().size() - 3));
-                lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
-
-                while (window.pollEvent(event)) {
-                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
-                        window.close();
-                        return EXIT_SUCCESS;
-                    }
-
-                    // Обрабатывает нажатие кнопки.
-                    if (event.type == sf::Event::KeyReleased) {
-
-                        // Выбор нижестоящей кнопки.
-                        if (event.key.code == sf::Keyboard::Up) {
-                            gameOverMenu.moveUp();
-                        }
-
-                        // Выбор нижестоящей кнопки.
-                        if (event.key.code == sf::Keyboard::Down) {
-                            gameOverMenu.moveDown();
-                        }
-
-                        if (event.key.code == sf::Keyboard::Enter) {
-                            switch (gameOverMenu.getSelected()) {
-                            case 0:
-                                //startSingleplayer(window);
-                                return 2;
-
-                            case 1:
-                                //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                                //menu.pressButton(name, 0);
-                                return 0;
-                            }
-                        }
-                    }
-                }
-
-                window.draw(gameOverText);
-                window.draw(lengthText);
-                gameOverMenu.draw();
-
-                window.display();
-            }
+            sf::RectangleShape player;
+            sf::Texture playerTexture;
+            std::string playerTexturePath = "../designe/snake" + settings[9].second + ".png";
+            if (!playerTexture.loadFromFile(playerTexturePath)) return -1;
+            player.setSize(sf::Vector2f(30, 30));
+            player.setPosition(sf::Vector2f(820, 10 + stoi(settings[8].second) * CELL_SIZE));
+            player.setTexture(&playerTexture);
 
             // Отрисовка
             window.clear();
             draw(window, score);
+            window.draw(player);
             window.draw(nickname);
             window.draw(round);
 
             window.display();
         }
     }
-    return snake.getLength();
+
+
+    // Проверка на столкновение
+    while (true) {
+
+        window.clear();
+        int winScore = (score > botScore) ? score : botScore;
+        std::string winner = (score == winScore) ? ((botScore == winScore) ? "nobody" : settings[6].second) : "Bot";
+        winner = (botIsOn) ? winner + " win!" : "Game Over";
+        _score = winScore;
+
+        // Отображение "Game Over" и длины змейки
+        sf::Text gameOverText;
+        gameOverText.setFont(getFont());
+        gameOverText.setCharacterSize(40);
+        gameOverText.setFillColor(sf::Color::Red);
+        gameOverText.setString(winner);
+        gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
+
+        sf::Text lengthText;
+        lengthText.setFont(getFont());
+        lengthText.setCharacterSize(20);
+        lengthText.setFillColor(sf::Color::White);
+        lengthText.setString("Score: " + std::to_string(winScore));
+        lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
+
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
+                window.close();
+                return EXIT_SUCCESS;
+            }
+
+            // Обрабатывает нажатие кнопки.
+            if (event.type == sf::Event::KeyReleased) {
+
+                // Выбор нижестоящей кнопки.
+                if (event.key.code == sf::Keyboard::Up) {
+                    gameOverMenu.moveUp();
+                }
+
+                // Выбор нижестоящей кнопки.
+                if (event.key.code == sf::Keyboard::Down) {
+                    gameOverMenu.moveDown();
+                }
+
+                if (event.key.code == sf::Keyboard::Enter) {
+                    switch (gameOverMenu.getSelected()) {
+                    case 0:
+                        //startSingleplayer(window);
+                        return 2;
+
+                    case 1:
+                        //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
+                        //menu.pressButton(name, 0);
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        window.draw(gameOverText);
+        window.draw(lengthText);
+        gameOverMenu.draw();
+
+        window.display();
+    }
+    return _score;
 }
 
 void singleplayer::initFont() {
@@ -274,7 +307,7 @@ void singleplayer::updateSpeed() {
 }
 
 bool singleplayer::checkCollision() {
-
+    bool result = false;
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
@@ -285,59 +318,69 @@ bool singleplayer::checkCollision() {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     // Проверка на столкновение с границами
     sf::Vector2f headPosition1 = snake.getHeadPosition();
     if (headPosition1.x < stoi(settings[8].second) * CELL_SIZE || headPosition1.x >= width - stoi(settings[8].second) * CELL_SIZE ||
         headPosition1.y < stoi(settings[8].second) * CELL_SIZE || headPosition1.y >= height - stoi(settings[8].second) * CELL_SIZE) {
-        return true;
+        collision = "bot";
+        result = true;
     }
     if (botIsOn) {
         // Проверка на столкновение с границами
         sf::Vector2f headPosition2 = bot.getHeadPosition();
         if (headPosition2.x < stoi(settings[8].second) * CELL_SIZE || headPosition2.x >= width - stoi(settings[8].second) * CELL_SIZE ||
             headPosition2.y < stoi(settings[8].second) * CELL_SIZE || headPosition2.y >= height - stoi(settings[8].second) * CELL_SIZE) {
-            return true;
+            collision = (!result) ? "playa" : "Nobody";
+            result = true;
         }
 
         // Проверка на столкновение голов
         float distance = std::hypot(headPosition1.x - headPosition2.x, headPosition1.y - headPosition2.y);
         float minDistance = 0;  // Установите подходящее значение
         if (distance <= minDistance) {
-            return true;
+            collision = "Nobody";
+            result = true;
         }
         // Проверка столкновения с стенами
         for (const auto& wall : walls) {
             if (headPosition2 == wall.getPosition()) {
-                return true;
+                collision = "playa";
+                result = true;
             }
         }
         // Проверка на столкновение голов с телом
         if (bot.checkCollisionWithBody(headPosition1)) {
-            return true;
+            collision = "bot kill";
+            result = true;
         }
         if (bot.checkCollisionWithMyself()) {
-            return true;
+            collision = "playa";
+            result = true;
         }
         if (snake.checkCollisionWithBody(headPosition2)) {
-            return true;
+            collision = "playa kill";
+            result = true;
         }
     }
     // Проверка столкновения с стенами
     for (const auto& wall : walls) {
         if (headPosition1 == wall.getPosition()) {
-            return true;
+            collision = "bot";
+            result = true;
         }
     }
     
     // Проверка на с самими собой
     if (snake.checkCollisionWithMyself()) {
-        return true;
+        collision = "bot";
+        result = true;
     }
 
-    return false;
+    return result;
 }
 
 void singleplayer::map() {
@@ -348,7 +391,8 @@ void singleplayer::map() {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     for (int j = 0; j < 5; j++) {
@@ -429,7 +473,8 @@ void singleplayer::draw(sf::RenderWindow& window, int& score) {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     // Отображение количества клеток змейки
@@ -468,7 +513,8 @@ void singleplayer::initTextures() {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     if (!fieldTexture.loadFromFile("../designe/field.png")) {
@@ -528,7 +574,8 @@ void singleplayer::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode 
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     snake.handleInput(window, settings, key);

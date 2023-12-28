@@ -17,7 +17,8 @@ void Apple::respawn(const std::vector<Wall>& walls) {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     position.x = static_cast<int>(rand() % (WIDTH - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE;

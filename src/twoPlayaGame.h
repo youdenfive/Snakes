@@ -58,7 +58,6 @@ protected:
 
     void move();
     void handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key, Snake& snake);
-    int score();
     void initTextures();
     void drawSprites(sf::RenderWindow& window);
     void createSprites();
@@ -83,5 +82,6 @@ private:
     sf::Texture snake2Texture;
     sf::Sprite appleSprite;
     std::deque<sf::Sprite> bodySprites;
+    int score;
 
 };

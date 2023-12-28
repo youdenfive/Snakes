@@ -4,8 +4,7 @@
 #include <stdlib.h> // нужен для вызова функций rand(), srand()
 #include <time.h> // нужен для вызова функции time()
 
-twoPlayaGame::twoPlayaGame(std::string _playa1name, std::string _playa2name) : player1(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up", "W"}, {"Left", "A"}, {"Down", "S"}, {"Right", "D"} }),
-player2(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up", "Up"}, {"Left", "Left"}, {"Down", "Down"}, {"Right", "Right"} }), playa1name(_playa1name), playa2name(_playa2name)
+twoPlayaGame::twoPlayaGame(std::string _playa1name, std::string _playa2name) : playa1name(_playa1name), playa2name(_playa2name)
 {     
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -13,8 +12,12 @@ player2(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up"
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
+
+   player1 = Snake(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { settings[0], settings[1], settings[2], settings[3] });
+   player2 = Snake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { settings[13], settings[14], settings[15], settings[16] });
 
     collision = "";
     // Размеры окна
@@ -42,6 +45,7 @@ player2(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { {"Up"
     lengthText.setFillColor(sf::Color::White);
 
     initFont();  // Вызываем метод для инициализации шрифта
+    score = 0;
 };
 
 int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
@@ -72,7 +76,8 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     auto roundsCount = std::stoi(settings[4].second);
@@ -80,7 +85,17 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
     int score1 = 0;
     int score2 = 0;
 
+    // Инициализирует текст вложенных меню
+    std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
+    gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
+    gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
+    gameOverMenu.alignTextMenu(1);
+
+
+    sf::Event event;
+
     for (int roundNumber = 1; roundNumber <= roundsCount; ++roundNumber) {
+        collision = "";
 
         sf::Text round;
         round.setFont(font);
@@ -93,7 +108,6 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
         player2.setDefaultSnake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
 
         while (window.isOpen()) {
-            sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) {
                     window.close();
@@ -135,8 +149,6 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
                                     break;
 
                                 case 2:
-                                    //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                                    //menu.pressButton(name, 0);
                                     return 0;
                                 }
                             }
@@ -156,79 +168,25 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
 
             updateSpeed(); // Вызываем для начальной установки интервала обновления
 
-            // Инициализирует текст вложенных меню
-            std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
-            gameMenu gameOverMenu(window, 950, 550, gameOverName, 100, 70);
-            gameOverMenu.setColor(sf::Color::Red, sf::Color(220, 220, 220), sf::Color::Red);
-            gameOverMenu.alignTextMenu(1);
 
-            if (checkCollision() && roundNumber < roundsCount) {
+
+            if (checkCollision()) {
                 score1 = score1 + getPlayer1().getBody().size() - 3;
                 score2 = score2 + getPlayer2().getBody().size() - 3;
-                break;
-            }
 
-            // Проверка на столкновение
-            while (checkCollision()) {
-                std::cout << "Game Over!" << std::endl;
-
-                window.clear();
-
-                // Отображение "Game Over" и длины змейки
-                sf::Text gameOverText;
-                gameOverText.setFont(getFont());
-                gameOverText.setCharacterSize(40);
-                gameOverText.setFillColor(sf::Color::Red);
-                std::string winString = (collision != "nobody") ? collision + " win!" : collision + " wins..";
-                gameOverText.setString(winString);
-                gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
-
-                sf::Text lengthText;
-                lengthText.setFont(getFont());
-                lengthText.setCharacterSize(20);
-                lengthText.setFillColor(sf::Color::White);
-                lengthText.setString("Length: " + std::to_string(score()));
-                lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
-
-                while (window.pollEvent(event)) {
-                    if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
-                        window.close();
-                        return EXIT_SUCCESS;
-                    }
-
-                    // Обрабатывает нажатие кнопки.
-                    if (event.type == sf::Event::KeyReleased) {
-
-                        // Выбор нижестоящей кнопки.
-                        if (event.key.code == sf::Keyboard::Up) {
-                            gameOverMenu.moveUp();
-                        }
-
-                        // Выбор нижестоящей кнопки.
-                        if (event.key.code == sf::Keyboard::Down) {
-                            gameOverMenu.moveDown();
-                        }
-
-                        if (event.key.code == sf::Keyboard::Enter) {
-                            switch (gameOverMenu.getSelected()) {
-                            case 0:
-                                //startSingleplayer(window);
-                                return 2;
-
-                            case 1:
-                                //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
-                                //menu.pressButton(name, 0);
-                                return 0;
-                            }
-                        }
-                    }
+                if (collision == playa1name) {
+                    score1 += 5;
                 }
-
-                window.draw(gameOverText);
-                window.draw(lengthText);
-                gameOverMenu.draw();
-
-                window.display();
+                else if (collision == playa2name) {
+                    score2 += 5;
+                }
+                else if (collision == playa1name + " kill") {
+                    score1 += 10;
+                }
+                else if (collision == playa2name + " kill") {
+                    score2 += 10;
+                }
+                break;
             }
 
             // Отрисовка
@@ -238,8 +196,90 @@ int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
             window.display();
         }
     }
+    while (true) {
+        window.clear();
 
-    return score();
+
+        int winScore = (score1 > score2) ? score1 : score2;
+        std::string winner = (score1 == winScore) ? ((score2 == winScore) ? "nobody" : playa1name) : playa2name;
+        score = winScore;
+
+        sf::RectangleShape winnerCol;
+
+        //if (score1 != score2) {
+
+            std::string winnerColor = (score1 > score2) ? settings[9].second : settings[10].second;
+
+            sf::Texture winnerTexture;
+            std::string winnerTexturePath = "../designe/snake" + winnerColor + ".png";
+            if (!winnerTexture.loadFromFile(winnerTexturePath)) return -1;
+            winnerCol.setSize(sf::Vector2f(30, 30));
+            winnerCol.setPosition(sf::Vector2f(730, 440));
+            winnerCol.setTexture(&winnerTexture);
+        //}
+        if (score1 == score2) {
+            winnerCol.setSize(sf::Vector2f(0, 0));
+        }
+
+        // Отображение "Game Over" и длины змейки
+        sf::Text gameOverText;
+        gameOverText.setFont(getFont());
+        gameOverText.setCharacterSize(40);
+        gameOverText.setFillColor(sf::Color::Red);
+        gameOverText.setString(winner + " win!");
+        gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
+
+        sf::Text lengthText;
+        lengthText.setFont(getFont());
+        lengthText.setCharacterSize(20);
+        lengthText.setFillColor(sf::Color::White);
+        lengthText.setString("Score: " + std::to_string(winScore));
+        lengthText.setPosition(WIDTH * CELL_SIZE / 2 - 20, HEIGHT * CELL_SIZE / 2 + 40);
+
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed || event.key.code == sf::Keyboard::Escape) {
+                window.close();
+                return EXIT_SUCCESS;
+            }
+
+            // Обрабатывает нажатие кнопки.
+            if (event.type == sf::Event::KeyReleased) {
+
+                // Выбор нижестоящей кнопки.
+                if (event.key.code == sf::Keyboard::Up) {
+                    gameOverMenu.moveUp();
+                }
+
+                // Выбор нижестоящей кнопки.
+                if (event.key.code == sf::Keyboard::Down) {
+                    gameOverMenu.moveDown();
+                }
+
+                if (event.key.code == sf::Keyboard::Enter) {
+                    switch (gameOverMenu.getSelected()) {
+                    case 0:
+                        //startSingleplayer(window);
+                        return 2;
+
+                    case 1:
+                        //std::vector<sf::String> name = { "START", "SETTINGS", "ABOUT", "EXIT" };
+                        //menu.pressButton(name, 0);
+                        return 0;
+                    }
+                }
+            }
+        }
+
+        window.draw(gameOverText);
+        window.draw(lengthText);
+        window.draw(winnerCol);
+        gameOverMenu.draw();
+
+        window.display();
+    }
+
+
+    return score;
 }
 
 void twoPlayaGame::initFont() {
@@ -264,7 +304,8 @@ bool twoPlayaGame::checkCollision() {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     // Размеры окна
@@ -296,12 +337,12 @@ bool twoPlayaGame::checkCollision() {
 
     // Проверка на столкновение голов с телом
     if (player2.checkCollisionWithBody(headPosition1)) {
-        collision = playa2name;
+        collision = playa2name + " kill";
         result = true;
     }
 
     if (player1.checkCollisionWithBody(headPosition2)) {
-        collision = playa1name;
+        collision = playa1name + " kill";
         result = true;
     }
     // Проверка на с самими собой
@@ -391,18 +432,38 @@ void twoPlayaGame::draw(sf::RenderWindow& window, sf::Vector2i playersScore) {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     // Отображение количества клеток змейки
     lengthText.setString(playa1name + ":" + std::to_string(playersScore.x + getPlayer1().getBody().size() - 3));
-    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
+    lengthText.setPosition(50 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
 
     // Отображение количества клеток змейки
     lengthText.setString(playa2name + ":" + std::to_string(playersScore.y + getPlayer2().getBody().size() - 3));
-    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE);  // Позиция текста
+    lengthText.setPosition(50 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
+
+
+    sf::RectangleShape player1;
+    sf::Texture player1Texture;
+    std::string player1TexturePath = "../designe/snake" + settings[9].second + ".png";
+    if (!player1Texture.loadFromFile(player1TexturePath)) return;
+    player1.setSize(sf::Vector2f(30, 30));
+    player1.setPosition(sf::Vector2f(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE));
+    player1.setTexture(&player1Texture);
+    window.draw(player1);
+
+    sf::RectangleShape player2;
+    sf::Texture player2Texture;
+    std::string player2TexturePath = "../designe/snake" + settings[10].second + ".png";
+    if (!player2Texture.loadFromFile(player2TexturePath)) return;
+    player2.setSize(sf::Vector2f(30, 30));
+    player2.setPosition(sf::Vector2f(10 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE));
+    player2.setTexture(&player2Texture);
+    window.draw(player2);
 
     // Отрисовка заднего фона (границ)
     window.draw(border);
@@ -430,7 +491,8 @@ void twoPlayaGame::initTextures() {
         settings = getSettings();
     }
     catch (...) {
-        settings = setDefaultSettings();
+        setDefaultSettings();
+        settings = getSettings();
     }
 
     if (!fieldTexture.loadFromFile("../designe/field.png")) {
@@ -476,17 +538,6 @@ void twoPlayaGame::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode 
 {
     snake.handleInputTwo(window, key);
 
-}
-int twoPlayaGame::score() {
-    if (playa1name == collision) {
-        return player1.getLength();
-    }
-    else if (playa2name == collision) {
-        return player2.getLength();
-    }
-    else if (collision == "Nobody") {
-        return 0;
-    }
 }
 
 void twoPlayaGame::drawField(sf::RenderWindow& window)

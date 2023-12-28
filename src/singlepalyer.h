@@ -67,7 +67,7 @@ private:
     Snake bot;
     bool botIsOn;
     Apple apple;  // Добавляем объект Apple
-
+    int _score;
     sf::Font font;         // Добавленный объект шрифта
     sf::Text lengthText;   // Добавленный объект текста для отображения количества клеток
 
@@ -84,4 +84,5 @@ private:
     sf::Sprite appleSprite;
     std::deque<sf::Sprite> bodySprites;
     sf::Texture botTexture;
+    std::string collision;
 };
