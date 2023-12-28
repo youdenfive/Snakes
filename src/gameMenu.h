@@ -20,7 +20,7 @@ class gameMenu {
 		/// Деструктор.
 		~gameMenu()
 		{
-			delete[] _menu;
+			//delete[] _menu;
 		};
 
 		/**
@@ -103,7 +103,7 @@ class gameMenu {
 		int getMode()
 		{
 			return _menuMode;
-		}
+		};
 
 		/**
 		*	Меняет содержимое меню.
@@ -115,6 +115,8 @@ class gameMenu {
 		*	@return void
 		*/
 		void pressButton(std::vector<sf::String> name, int mode, int align = 1);
+
+		void setPositionY(float ypos);
 
 	private:
 		float _menu_x;		// X-овая координата меню.

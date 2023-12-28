@@ -1,8 +1,10 @@
 #include <SFML/Graphics.hpp>
-#include "singlepalyer.h"
-#include <string>
+#include "twoPlayaGame.h"
+#include <iostream>
+#include <stdlib.h> // нужен для вызова функций rand(), srand()
+#include <time.h> // нужен для вызова функции time()
 
-singleplayer::singleplayer(Snake _snake) : snake(_snake)
+twoPlayaGame::twoPlayaGame(std::string _playa1name, std::string _playa2name) : playa1name(_playa1name), playa2name(_playa2name)
 {     
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -14,6 +16,10 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
         settings = getSettings();
     }
 
+   player1 = Snake(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { settings[0], settings[1], settings[2], settings[3] });
+   player2 = Snake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE), { settings[13], settings[14], settings[15], settings[16] });
+
+    collision = "";
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
@@ -27,6 +33,7 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
     // Установка позиции прямоугольника границ, чтобы он оставался внутри экрана
     border.setPosition(stoi(settings[8].second) * CELL_SIZE, stoi(settings[8].second) * CELL_SIZE);
 
+
     // Загружаем шрифт
     if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
         std::cerr << "Failed to load font." << std::endl;
@@ -38,14 +45,30 @@ singleplayer::singleplayer(Snake _snake) : snake(_snake)
     lengthText.setFillColor(sf::Color::White);
 
     initFont();  // Вызываем метод для инициализации шрифта
-    collision = "";
-    _score = 0;
+    score = 0;
 };
 
-int singleplayer::startSingleplayer(sf::RenderWindow& window)
+int twoPlayaGame::startTwoPlayaGame(sf::RenderWindow& window)
 {
 
     window.setFramerateLimit(10);
+
+    // Инициализация генератора случайных чисел
+    srand(static_cast<unsigned>(time(nullptr)));
+
+    initTextures();
+    createSprites();
+
+    // Установка начального интервала обновления
+    updateSpeed();
+
+    // Инициализирует текст вложенных меню
+    std::vector<sf::String> gamePauseName = { "CONTINUE", "RESTART", "GO TO MENU"};
+    gameMenu gamePauseMenu(window, 950, 550, gamePauseName, 100, 70);
+    gamePauseMenu.setColor(sf::Color::Yellow, sf::Color(40, 40, 40), sf::Color::Yellow);
+    gamePauseMenu.alignTextMenu(1);
+
+    bool pause = false;
 
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -57,22 +80,10 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         settings = getSettings();
     }
 
-    if (settings[5].second == "ON") {
-        botIsOn = true;
-    }
-    else {
-        botIsOn = false;
-    }
+    auto roundsCount = std::stoi(settings[4].second);
 
-    int score = 0;
-    int botScore = 0;
-
-    sf::Text nickname;
-    nickname.setFont(font);
-    nickname.setCharacterSize(30);
-    nickname.setFillColor(sf::Color::White);
-    nickname.setPosition(860, 10 + stoi(settings[8].second) * CELL_SIZE);
-    nickname.setString(settings[6].second);
+    int score1 = 0;
+    int score2 = 0;
 
     // Инициализирует текст вложенных меню
     std::vector<sf::String> gameOverName = { "PLAY AGAIN", "BACK TO MENU" };
@@ -83,12 +94,9 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
     sf::Event event;
 
-    // Инициализация генератора случайных чисел
-    srand(static_cast<unsigned>(time(nullptr)));
-    int roundsCount = stoi(settings[4].second);
-
     for (int roundNumber = 1; roundNumber <= roundsCount; ++roundNumber) {
         collision = "";
+
         sf::Text round;
         round.setFont(font);
         round.setCharacterSize(30);
@@ -96,35 +104,21 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
         round.setPosition(1560, 10 + stoi(settings[8].second) * CELL_SIZE);
         round.setString("Round: " + std::to_string(roundNumber) + '/' + std::to_string(roundsCount));
 
-        deleteWalls();
-        snake.setDefaultSnake();
-        if (botIsOn) {
-            bot.setDefaultSnake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
-        }
-        // Добавление стен
-        map();
-        initTextures();
-        createSprites();
-        // Установка начального интервала обновления
-        updateSpeed();
-
-        // Инициализирует текст вложенных меню
-        std::vector<sf::String> gamePauseName = { "CONTINUE", "RESTART", "GO TO MENU" };
-        gameMenu gamePauseMenu(window, 950, 550, gamePauseName, 100, 70);
-        gamePauseMenu.setColor(sf::Color::Yellow, sf::Color(40, 40, 40), sf::Color::Yellow);
-        gamePauseMenu.alignTextMenu(1);
-
-        bool pause = false;
+        player1.setDefaultSnake(sf::Vector2f(WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
+        player2.setDefaultSnake(sf::Vector2f(2 * WIDTH / 3 * CELL_SIZE, HEIGHT / 2 * CELL_SIZE));
 
         while (window.isOpen()) {
-            sf::Event event;
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) {
                     window.close();
                 }
+                if (event.type == sf::Event::KeyPressed) {
+                    auto key = event.key.scancode;
+                    handleInput(window, key, player1);
+                    handleInput(window, key, player2);
+                }
             }
 
-            // 
             if (event.key.code == sf::Keyboard::Escape) {
                 pause = true;
 
@@ -167,80 +161,72 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
                 }
             }
 
-            if (sf::Event::KeyReleased) {
-
-                auto key = event.key.scancode;
-
-                // После обработки событий ввода, обновляйте состояние кнопок
-                handleInput(window, key);
-            }
-
             // Обновление положения яблока, чтобы избежать столкновения с стенами
             getApple().respawn(getWalls());
 
-            if (botIsOn) {
-                bot.changeBotDirection(apple.getPosition(), walls);
-            }
-
-            // Движение змейки
             move();
 
             updateSpeed(); // Вызываем для начальной установки интервала обновления
 
 
+
             if (checkCollision()) {
-                score = score + getSnake().getBody().size() - 3;
-                botScore = botScore + bot.getLength() - 3;
-                if (collision == "playa" && botIsOn) {
-                    score += 5;
+                score1 = score1 + getPlayer1().getBody().size() - 3;
+                score2 = score2 + getPlayer2().getBody().size() - 3;
+
+                if (collision == playa1name) {
+                    score1 += 5;
                 }
-                else if (collision == "bot" && botIsOn) {
-                    botScore += 5;
+                else if (collision == playa2name) {
+                    score2 += 5;
                 }
-                else if (collision == "playa kill" && botIsOn) {
-                    score += 5;
+                else if (collision == playa1name + " kill") {
+                    score1 += 10;
                 }
-                else if (collision == "bot kill" && botIsOn) {
-                    botScore += 5;
+                else if (collision == playa2name + " kill") {
+                    score2 += 10;
                 }
                 break;
             }
 
-            sf::RectangleShape player;
-            sf::Texture playerTexture;
-            std::string playerTexturePath = "../designe/snake" + settings[9].second + ".png";
-            if (!playerTexture.loadFromFile(playerTexturePath)) return -1;
-            player.setSize(sf::Vector2f(30, 30));
-            player.setPosition(sf::Vector2f(820, 10 + stoi(settings[8].second) * CELL_SIZE));
-            player.setTexture(&playerTexture);
-
             // Отрисовка
             window.clear();
-            draw(window, score);
-            window.draw(player);
-            window.draw(nickname);
+            draw(window, sf::Vector2i(score1, score2));
             window.draw(round);
-
             window.display();
         }
     }
-
-
-    // Проверка на столкновение
     while (true) {
-
         window.clear();
-        int winScore = (score > botScore) ? score : botScore;
-        std::string winner = (score == winScore) ? ((botScore == winScore) ? "nobody" : settings[6].second) : "Bot";
-        winner = (botIsOn) ? winner + " win!" : "Game Over";
-        _score = winScore;
+
+
+        int winScore = (score1 > score2) ? score1 : score2;
+        std::string winner = (score1 == winScore) ? ((score2 == winScore) ? "nobody" : playa1name) : playa2name;
+        score = winScore;
+
+        sf::RectangleShape winnerCol;
+
+        //if (score1 != score2) {
+
+            std::string winnerColor = (score1 > score2) ? settings[9].second : settings[10].second;
+
+            sf::Texture winnerTexture;
+            std::string winnerTexturePath = "../designe/snake" + winnerColor + ".png";
+            if (!winnerTexture.loadFromFile(winnerTexturePath)) return -1;
+            winnerCol.setSize(sf::Vector2f(30, 30));
+            winnerCol.setPosition(sf::Vector2f(730, 440));
+            winnerCol.setTexture(&winnerTexture);
+        //}
+        if (score1 == score2) {
+            winnerCol.setSize(sf::Vector2f(0, 0));
+        }
 
         // Отображение "Game Over" и длины змейки
         sf::Text gameOverText;
         gameOverText.setFont(getFont());
         gameOverText.setCharacterSize(40);
         gameOverText.setFillColor(sf::Color::Red);
-        gameOverText.setString(winner);
+        gameOverText.setString(winner + " win!");
         gameOverText.setPosition(WIDTH * CELL_SIZE / 2 - 100, HEIGHT * CELL_SIZE / 2 - 20);
 
         sf::Text lengthText;
@@ -286,167 +272,140 @@ int singleplayer::startSingleplayer(sf::RenderWindow& window)
 
         window.draw(gameOverText);
         window.draw(lengthText);
+        window.draw(winnerCol);
         gameOverMenu.draw();
 
         window.display();
     }
-    return _score;
+
+
+    return score;
 }
 
-void singleplayer::initFont() {
+void twoPlayaGame::initFont() {
     // Загружаем шрифт
     if (!font.loadFromFile("../designe/font/menuFont.ttf")) {
         std::cerr << "Failed to load font." << std::endl;
     }
 }
 
-void singleplayer::updateSpeed() {
+void twoPlayaGame::updateSpeed() {
     // Пример: более короткий интервал для более длинной змейки
 
-    updateInterval = std::max(0.1f, 1.0f - 0.05f * static_cast<float>(snake.getBody().size()));
+    updateInterval = std::max(0.1f, 1.0f - 0.05f * static_cast<float>(player1.getBody().size()));
 }
 
-bool singleplayer::checkCollision() {
+bool twoPlayaGame::checkCollision() {
     bool result = false;
+
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
+    }
+    catch (...) {
+        setDefaultSettings();
+        settings = getSettings();
+    }
+
     // Размеры окна
     float width = sf::VideoMode::getDesktopMode().width;
     float height = sf::VideoMode::getDesktopMode().height;
 
-    std::vector<std::pair<std::string, std::string>> settings;
-
-    try {
-        settings = getSettings();
-    }
-    catch (...) {
-        setDefaultSettings();
-        settings = getSettings();
-    }
-
     // Проверка на столкновение с границами
-    sf::Vector2f headPosition1 = snake.getHeadPosition();
+    sf::Vector2f headPosition1 = player1.getHeadPosition();
     if (headPosition1.x < stoi(settings[8].second) * CELL_SIZE || headPosition1.x >= width - stoi(settings[8].second) * CELL_SIZE ||
         headPosition1.y < stoi(settings[8].second) * CELL_SIZE || headPosition1.y >= height - stoi(settings[8].second) * CELL_SIZE) {
-        collision = "bot";
+        collision = playa2name;
         result = true;
     }
-    if (botIsOn) {
-        // Проверка на столкновение с границами
-        sf::Vector2f headPosition2 = bot.getHeadPosition();
-        if (headPosition2.x < stoi(settings[8].second) * CELL_SIZE || headPosition2.x >= width - stoi(settings[8].second) * CELL_SIZE ||
-            headPosition2.y < stoi(settings[8].second) * CELL_SIZE || headPosition2.y >= height - stoi(settings[8].second) * CELL_SIZE) {
-            collision = (!result) ? "playa" : "Nobody";
-            result = true;
-        }
+    // Проверка на столкновение с границами
+    sf::Vector2f headPosition2 = player2.getHeadPosition();
+    if (headPosition2.x < stoi(settings[8].second) * CELL_SIZE || headPosition2.x >= width - stoi(settings[8].second) * CELL_SIZE ||
+        headPosition2.y < stoi(settings[8].second) * CELL_SIZE || headPosition2.y >= height - stoi(settings[8].second) * CELL_SIZE) {
+        collision = (!result) ? playa1name : "Nobody";
+        result = true;
+    }
 
-        // Проверка на столкновение голов
-        float distance = std::hypot(headPosition1.x - headPosition2.x, headPosition1.y - headPosition2.y);
-        float minDistance = 0;  // Установите подходящее значение
-        if (distance <= minDistance) {
-            collision = "Nobody";
-            result = true;
-        }
-        // Проверка столкновения с стенами
-        for (const auto& wall : walls) {
-            if (headPosition2 == wall.getPosition()) {
-                collision = "playa";
-                result = true;
-            }
-        }
-        // Проверка на столкновение голов с телом
-        if (bot.checkCollisionWithBody(headPosition1)) {
-            collision = "bot kill";
-            result = true;
-        }
-        if (bot.checkCollisionWithMyself()) {
-            collision = "playa";
-            result = true;
-        }
-        if (snake.checkCollisionWithBody(headPosition2)) {
-            collision = "playa kill";
-            result = true;
-        }
+    // Проверка на столкновение голов
+    float distance = std::hypot(headPosition1.x - headPosition2.x, headPosition1.y - headPosition2.y);
+    float minDistance = 0;  // Установите подходящее значение
+    if (distance <= minDistance) {
+        collision = "Nobody";
+        result = true;
     }
-    // Проверка столкновения с стенами
-    for (const auto& wall : walls) {
-        if (headPosition1 == wall.getPosition()) {
-            collision = "bot";
-            result = true;
-        }
+
+    // Проверка на столкновение голов с телом
+    if (player2.checkCollisionWithBody(headPosition1)) {
+        collision = playa2name + " kill";
+        result = true;
     }
-    
+
+    if (player1.checkCollisionWithBody(headPosition2)) {
+        collision = playa1name + " kill";
+        result = true;
+    }
     // Проверка на с самими собой
-    if (snake.checkCollisionWithMyself()) {
-        collision = "bot";
+    if (player1.checkCollisionWithMyself()) {
+        collision = playa2name;
         result = true;
     }
 
+    if (player2.checkCollisionWithMyself()) {
+        collision = playa1name;
+        result = true;
+    }
     return result;
 }
 
-void singleplayer::map() {
-
-    std::vector<std::pair<std::string, std::string>> settings;
-
-    try {
-        settings = getSettings();
-    }
-    catch (...) {
-        setDefaultSettings();
-        settings = getSettings();
-    }
-
-    for (int j = 0; j < 5; j++) {
-        for (int i = 0; i < 5; i++)
-            addWall(sf::Vector2f(static_cast<int>(rand() % (WIDTH - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE,
-                static_cast<int>(rand() % (HEIGHT - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE));
+void twoPlayaGame::appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether() {
+    srand(time(NULL));
+    int appleSkinNum = 1 + rand() % (4 - 1 + 1);
+    if (!appleTexture.loadFromFile("../designe/apple" + std::to_string(appleSkinNum) + ".png")) {
+        std::cerr << "Failed to load apple texture." << std::endl;
     }
 }
 
-void singleplayer::move() {
+void twoPlayaGame::move() {
 
     // Получаем прошедшее время
     float elapsedTime = clock.getElapsedTime().asSeconds();
 
     // Копируем голову и добавляем новую голову в новую позицию
-    sf::RectangleShape newHead = snake.getBody().front();
-    newHead.move(snake.getDirection());
+    sf::RectangleShape newHead = player1.getBody().front();
+    newHead.move(player1.getDirection());
 
-    sf::Vector2f headPosition1 = newHead.getPosition();
+    sf::Vector2f headPosition = newHead.getPosition();
+
+    sf::RectangleShape newHead2 = player2.getBody().front();
+    newHead2.move(player2.getDirection());
+
+    sf::Vector2f headPosition2 = newHead2.getPosition();
 
     // Проверка на поедание яблока
-    if (headPosition1 == apple.getPosition()) {
-        snake.eatApple();
+    if (headPosition == apple.getPosition()) {
+        player1.eatApple();
+        appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
+        apple.respawn({});
+        appleRespawnTimer.restart();
+        createSprites();
+    }
+    else if (headPosition2 == apple.getPosition()) {
+        player2.eatApple();
+        appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
         apple.respawn({});
         appleRespawnTimer.restart();
         createSprites();
     }
     else {
-        snake.move();
+        player1.move();
+        player2.move();
     }
-
-    if(botIsOn)
-    {
-        sf::RectangleShape newHead2 = bot.getBody().front();
-        newHead2.move(bot.getDirection());
-
-        sf::Vector2f headPosition2 = newHead2.getPosition();
-
-        if (headPosition2 == apple.getPosition()) {
-            bot.eatApple();
-            apple.respawn({});
-            appleRespawnTimer.restart();
-            createSprites();
-        }
-        else {
-            bot.move();
-        }
-    }
-
-    
 
     // Проверка времени с момента последнего респауна яблока
     if (appleRespawnTimer.getElapsedTime().asSeconds() >= 5) {
         // Респаун яблока и сброс таймера
+        appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
         apple.respawn(getWalls());
         appleRespawnTimer.restart();
     }
@@ -463,7 +422,7 @@ void singleplayer::move() {
     createSprites();
 }
 
-void singleplayer::draw(sf::RenderWindow& window, int& score) {
+void twoPlayaGame::draw(sf::RenderWindow& window, sf::Vector2i playersScore) {
     // Отрисовка стен и яблока
     drawSprites(window);
 
@@ -478,25 +437,44 @@ void singleplayer::draw(sf::RenderWindow& window, int& score) {
     }
 
     // Отображение количества клеток змейки
-    lengthText.setString("Score: " + std::to_string(score + this->getSnake().getBody().size() - 3));
-    lengthText.setPosition(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
+    lengthText.setString(playa1name + ":" + std::to_string(playersScore.x + getPlayer1().getBody().size() - 3));
+    lengthText.setPosition(50 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE);  // Позиция текста
     window.draw(lengthText);
+
+    // Отображение количества клеток змейки
+    lengthText.setString(playa2name + ":" + std::to_string(playersScore.y + getPlayer2().getBody().size() - 3));
+    lengthText.setPosition(50 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE);  // Позиция текста
+    window.draw(lengthText);
+
+
+    sf::RectangleShape player1;
+    sf::Texture player1Texture;
+    std::string player1TexturePath = "../designe/snake" + settings[9].second + ".png";
+    if (!player1Texture.loadFromFile(player1TexturePath)) return;
+    player1.setSize(sf::Vector2f(30, 30));
+    player1.setPosition(sf::Vector2f(10 + stoi(settings[8].second) * CELL_SIZE, 10 + stoi(settings[8].second) * CELL_SIZE));
+    player1.setTexture(&player1Texture);
+    window.draw(player1);
+
+    sf::RectangleShape player2;
+    sf::Texture player2Texture;
+    std::string player2TexturePath = "../designe/snake" + settings[10].second + ".png";
+    if (!player2Texture.loadFromFile(player2TexturePath)) return;
+    player2.setSize(sf::Vector2f(30, 30));
+    player2.setPosition(sf::Vector2f(10 + stoi(settings[8].second) * CELL_SIZE, 10 + (stoi(settings[8].second) + 1) * CELL_SIZE));
+    player2.setTexture(&player2Texture);
+    window.draw(player2);
 
     // Отрисовка заднего фона (границ)
     window.draw(border);
 }
 
 
-void singleplayer::drawSprites(sf::RenderWindow& window) {
+void twoPlayaGame::drawSprites(sf::RenderWindow& window) {
+    // Отрисовка каждого сегмента змейки с учетом поворота
 
     drawField(window);
 
-    // Отрисовка стен
-    for (const auto& wall : walls) {
-        window.draw(wall.getSprite());
-    }
-
-    // Отрисовка каждого сегмента змейки с учетом поворота
     for (const auto& sprite : bodySprites) {
         window.draw(sprite);
     }
@@ -505,7 +483,7 @@ void singleplayer::drawSprites(sf::RenderWindow& window) {
     window.draw(appleSprite);
 }
 
-void singleplayer::initTextures() {
+void twoPlayaGame::initTextures() {
 
     std::vector<std::pair<std::string, std::string>> settings;
 
@@ -521,77 +499,48 @@ void singleplayer::initTextures() {
         std::cerr << "Failed to load field texture." << std::endl;
     }
 
-    if (!snakeTexture.loadFromFile("../designe/snake" + settings[9].second + ".png")) {
+    if (!snake1Texture.loadFromFile("../designe/snake" + settings[9].second + ".png")) {
+        std::cerr << "Failed to load snake texture." << std::endl;
+    }
+
+    if (!snake2Texture.loadFromFile("../designe/snake" + settings[10].second + ".png")) {
         std::cerr << "Failed to load snake texture." << std::endl;
     }
 
     if (!appleTexture.loadFromFile("../designe/apple" + settings[11].second + ".png")) {
         std::cerr << "Failed to load apple texture." << std::endl;
     }
-
-    if (!wallTexture.loadFromFile("../designe/wall.png")) {
-        std::cerr << "Failed to load wall texture." << std::endl;
-    }
-
-    if (!botTexture.loadFromFile("../designe/bot" + settings[12].second + ".png")) {
-        std::cerr << "Failed to load bots texture." << std::endl;
-    }
+    
+    appleSkinChangerFunction2023AkaMultyplySomeSkinsTogether();
 }
 
-void singleplayer::createSprites() {
+void twoPlayaGame::createSprites() {
+
     appleSprite.setTexture(appleTexture);
     appleSprite.setScale(CELL_SIZE / appleTexture.getSize().x, CELL_SIZE / appleTexture.getSize().y);
     appleSprite.setPosition(apple.getPosition());
-    for (const auto& segment : snake.getBody()) {
-        sf::Sprite segmentSprite(snakeTexture);
-        segmentSprite.setScale(CELL_SIZE / snakeTexture.getSize().x, CELL_SIZE / snakeTexture.getSize().y);
+    for (const auto& segment : player1.getBody()) {
+        sf::Sprite segmentSprite(snake1Texture);
+        segmentSprite.setScale(CELL_SIZE / snake1Texture.getSize().x, CELL_SIZE / snake1Texture.getSize().y);
         segmentSprite.setPosition(segment.getPosition());
         bodySprites.push_back(segmentSprite);
     }
-    if(botIsOn)
-    {
-        for (const auto& segment : bot.getBody()) {
-            sf::Sprite segmentSprite(botTexture);
 
-            segmentSprite.setScale(CELL_SIZE / botTexture.getSize().x, CELL_SIZE / botTexture.getSize().y);
-            segmentSprite.setPosition(segment.getPosition());
-            bodySprites.push_back(segmentSprite);
-        }
-    }
-    for (const auto& wall : walls) {
-        sf::Sprite wallSprite(wallTexture);
-        wallSprite.setScale(CELL_SIZE / wallTexture.getSize().x, CELL_SIZE / wallTexture.getSize().y);
-        wallSprite.setPosition(wall.getPosition());
-        bodySprites.push_back(wallSprite);
+    for (const auto& segment : player2.getBody()) {
+        sf::Sprite segmentSprite(snake2Texture);
+        segmentSprite.setScale(CELL_SIZE / snake2Texture.getSize().x, CELL_SIZE / snake2Texture.getSize().y);
+        segmentSprite.setPosition(segment.getPosition());
+        bodySprites.push_back(segmentSprite);
     }
 }
 
-void singleplayer::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key) 
+void twoPlayaGame::handleInput(sf::RenderWindow& window, sf::Keyboard::Scancode key, Snake& snake)
 {
-    std::vector<std::pair<std::string, std::string>> settings;
+    snake.handleInputTwo(window, key);
 
-    try {
-        settings = getSettings();
-    }
-    catch (...) {
-        setDefaultSettings();
-        settings = getSettings();
-    }
-
-    snake.handleInput(window, settings, key);
 }
 
-Snake singleplayer::getSnake()
-{
-    return this->snake;
-}
-
-void singleplayer::deleteWalls()
-{
-    walls.clear();
-}
-
-void singleplayer::drawField(sf::RenderWindow& window)
+void twoPlayaGame::drawField(sf::RenderWindow& window)
 {
     int width = sf::VideoMode::getDesktopMode().width;
     int height = sf::VideoMode::getDesktopMode().height;

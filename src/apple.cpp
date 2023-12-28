@@ -10,15 +10,25 @@ sf::Vector2f Apple::getPosition() const {
 }
 
 void Apple::respawn(const std::vector<Wall>& walls) {
-    // Генерируем случайные координаты для яблока в пределах поля
-    while (true) {
-        position.x = static_cast<int>(rand() % (WIDTH - 2) + 1) * CELL_SIZE;
-        position.y = static_cast<int>(rand() % (HEIGHT - 2) + 1) * CELL_SIZE;
 
-        if (!isOnWall(walls)) {
-            break;  // Выход из цикла, если яблоко не находится на стенах
-        }
+    std::vector<std::pair<std::string, std::string>> settings;
+
+    try {
+        settings = getSettings();
     }
+    catch (...) {
+        setDefaultSettings();
+        settings = getSettings();
+    }
+
+    position.x = static_cast<int>(rand() % (WIDTH - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE;
+    position.y = static_cast<int>(rand() % (HEIGHT - 2 * stoi(settings[8].second)) + stoi(settings[8].second)) * CELL_SIZE;
+
+    if (isOnWall(walls)) {
+        respawn(walls);
+
+    }
+
 }
 
 bool Apple::isOnWall(const std::vector<Wall>& walls) const {

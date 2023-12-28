@@ -1,9 +1,11 @@
 #pragma once
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "settings.h"
+#include <stdlib.h>
 
 // Размер ячейки
-const float CELL_SIZE = 30.0f;
+const int CELL_SIZE = 30.0f;
 
 class Wall {
 public:
